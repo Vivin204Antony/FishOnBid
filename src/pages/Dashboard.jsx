@@ -1,13 +1,26 @@
-export default function Dashboard() {
-  const token = localStorage.getItem("token");
+import { useContext, useEffect, useState } from "react";
+import api from "../api/axios";
+import { AuthContext } from "../context/AuthContext";
 
-  if (!token) {
-    window.location.href = "/login";
-  }
+export default function Dashboard() {
+  const { user, logout } = useContext(AuthContext);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    api.get("/auth/me").then(res => setCurrentUser(res.data));
+  }, []);
 
   return (
-    <div className="p-10 text-3xl font-bold">
-      Welcome to Dashboard! ✔
+    <div className="p-6">
+      <h1 className="text-2xl font-semibold">Welcome {currentUser?.name}</h1>
+      <p className="text-gray-600">Email: {currentUser?.email}</p>
+
+      <button
+        onClick={logout}
+        className="mt-4 bg-red-500 text-white px-4 py-2 rounded"
+      >
+        Logout
+      </button>
     </div>
   );
 }

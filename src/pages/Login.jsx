@@ -1,9 +1,14 @@
-import { useState } from "react";
-import axios from "../api/axios";
+import { useState, useContext } from "react";
+import api from "../api/axios";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
+
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -13,20 +18,23 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await axios.post("/auth/login", form);
+      const res = await api.post("/auth/login", form);
 
       if (res.data === "Invalid credentials") {
         setMessage("❌ Invalid email or password");
         return;
       }
 
-      // Save token
-      localStorage.setItem("token", res.data);
+      // Extract token & user
+      const { token, user } = res.data;
+
+      // Use context login
+      login(token, user);
+
       setMessage("✅ Login successful!");
 
-      // Redirect
-      window.location.href = "/dashboard";
-    } catch {
+      navigate("/dashboard");
+    } catch (error) {
       setMessage("❌ Server error");
     }
   };
@@ -59,7 +67,9 @@ export default function Login() {
             Login
           </button>
 
-          {message && <p className="text-center mt-4 text-red-600">{message}</p>}
+          {message && (
+            <p className="text-center mt-4 text-red-600 font-medium">{message}</p>
+          )}
         </form>
       </div>
     </div>
