@@ -75,8 +75,8 @@ git checkout backend    # Access backend code
 
 ## 👨‍💻 Project Owner
 
-**Fish-On-Bid** – Antony Vivin S
-Empowering rural communities through modern digital auction technology.
+**Fish-On-Bid** – Antony Vivin S 
+(Empowering rural communities through modern digital auction technology.)
 
 ---
 
