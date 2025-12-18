@@ -4,11 +4,11 @@ import com.FishOnBid.FishOnBid_Backend.entity.Auction;
 import com.FishOnBid.FishOnBid_Backend.entity.Bid;
 import com.FishOnBid.FishOnBid_Backend.repository.AuctionRepository;
 import com.FishOnBid.FishOnBid_Backend.repository.BidRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,35 +17,21 @@ public class AuctionService {
     private final AuctionRepository auctionRepo;
     private final BidRepository bidRepo;
 
-    public Auction createAuction(Auction auction) {
-        auction.setCurrentPrice(auction.getStartPrice());
-        auction.setStartTime(LocalDateTime.now());
-        auction.setActive(true);
-        return auctionRepo.save(auction);
-    }
-
-    public List<Auction> getAllAuctions() {
-        return auctionRepo.findAll();
-    }
-
-    public Auction getAuctionById(Long id) {
-        return auctionRepo.findById(id).orElseThrow();
-    }
-
+    @Transactional
     public Bid placeBid(Long auctionId, double amount, String email) {
-        Auction auction = auctionRepo.findById(auctionId)
+
+        Auction auction = auctionRepo.findByIdForUpdate(auctionId)
                 .orElseThrow(() -> new RuntimeException("Auction not found"));
 
         if (!auction.isActive()) {
-            throw new RuntimeException("Auction closed");
+            throw new RuntimeException("Auction is closed");
         }
 
         if (amount <= auction.getCurrentPrice()) {
-            throw new RuntimeException("Bid must be higher");
+            throw new RuntimeException("Bid must be higher than current price");
         }
 
         auction.setCurrentPrice(amount);
-        auctionRepo.save(auction);
 
         Bid bid = new Bid();
         bid.setAmount(amount);
@@ -53,6 +39,9 @@ public class AuctionService {
         bid.setAuction(auction);
         bid.setBidTime(LocalDateTime.now());
 
-        return bidRepo.save(bid);
+        bidRepo.save(bid);
+        auctionRepo.save(auction);
+
+        return bid;
     }
 }
