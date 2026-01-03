@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.7</version>
+		<relativePath/>
+	</parent>
+
+	<groupId>com.FishOnBid</groupId>
+	<artifactId>FishOnBid-Backend</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>FishOnBid</name>
+	<description>FishOnBid Backend with JWT Authentication</description>
+
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+
+	<dependencies>
+
+		<!-- Spring Boot Starters -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- MySQL Database -->
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Devtools -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- JWT (working latest version) -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.12.5</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.12.5</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.12.5</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Testing -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Compiler -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+					<release>${java.version}</release>
+				</configuration>
+			   </plugin>
+
+			   <!-- Spring Boot Plugin -->
+			   <plugin>
+				   <groupId>org.springframework.boot</groupId>
+				   <artifactId>spring-boot-maven-plugin</artifactId>
+				   <configuration>
+					   <excludes>
+						   <exclude>
+							   <groupId>org.projectlombok</groupId>
+							   <artifactId>lombok</artifactId>
+						   </exclude>
+					   </excludes>
+				   </configuration>
+			   </plugin>
+			   <!-- OpenRewrite Plugin for Java migration -->
+			   <plugin>
+				   <groupId>org.openrewrite.maven</groupId>
+				   <artifactId>rewrite-maven-plugin</artifactId>
+				   <version>5.45.0</version>
+				   <configuration>
+					   <activeRecipes>
+						   <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
+					   </activeRecipes>
+				   </configuration>
+				   <dependencies>
+					   <dependency>
+						   <groupId>org.openrewrite.recipe</groupId>
+						   <artifactId>rewrite-migrate-java</artifactId>
+						   <version>2.20.0</version>
+					   </dependency>
+				   </dependencies>
+			   </plugin>
+		</plugins>
+	</build>
+	<repositories>
+		<repository>
+			<id>openrewrite-releases</id>
+			<url>https://maven.openrewrite.org/releases</url>
+		</repository>
+	</repositories>
+</project>
