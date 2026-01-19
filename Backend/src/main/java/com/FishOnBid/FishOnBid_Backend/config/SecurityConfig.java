@@ -31,7 +31,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
@@ -46,15 +46,25 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Public endpoints
+                        .requestMatchers("/api/auth/**", "/actuator/**", "/api/ai/health", "/ws/**").permitAll()
+                        
+                        // Auction endpoints
                         .requestMatchers(HttpMethod.GET, "/api/auctions/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auctions/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/auctions/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/auctions/**").authenticated()
+                        
+                        // AI endpoints - JWT protected
+                        .requestMatchers(HttpMethod.POST, "/api/ai/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/ai/**").authenticated()
+                        
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

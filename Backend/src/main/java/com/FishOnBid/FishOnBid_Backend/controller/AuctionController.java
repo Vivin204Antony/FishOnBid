@@ -26,6 +26,24 @@ public class AuctionController {
 
     private final AuctionService auctionService;
 
+    // 🔹 Get all auctions
+    @GetMapping
+    public List<Auction> getAllAuctions() {
+        return auctionService.getAllAuctions();
+    }
+
+    // 🔹 Get active auctions
+    @GetMapping("/active")
+    public List<Auction> getActiveAuctions() {
+        return auctionService.getActiveAuctions();
+    }
+
+    // 🔹 Get auction by ID
+    @GetMapping("/{id}")
+    public Auction getAuctionById(@PathVariable Long id) {
+        return auctionService.getAuctionById(id);
+    }
+
     // 🔹 Create new auction
     @PostMapping
     public Auction createAuction(@RequestBody Auction auction) {

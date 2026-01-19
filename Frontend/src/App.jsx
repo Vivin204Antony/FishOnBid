@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Auctions from "./pages/Auctions";
 import AuctionDetail from "./pages/AuctionDetail";
+import CreateAuction from "./pages/CreateAuction";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -19,6 +21,7 @@ export default function App() {
         <OfflineBanner />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
           <Route
             path="/dashboard"
@@ -34,6 +37,16 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Auctions />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Create Auction with AI-Assisted Pricing */}
+          <Route
+            path="/auctions/create"
+            element={
+              <ProtectedRoute>
+                <CreateAuction />
               </ProtectedRoute>
             }
           />
