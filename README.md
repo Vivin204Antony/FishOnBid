@@ -89,10 +89,10 @@ Traditional fish auctions suffer from manual entry bottlenecks and a lack of dat
 git clone [https://github.com/Vivin204Antony/FishOnBid.git](https://github.com/Vivin204Antony/FishOnBid.git)
 
 # Backend Setup
-cd FishOnBid-Backend
+cd Backend
 ./mvnw spring-boot:run
 
 # Frontend Setup
-cd FishOnBid-Frontend
+cd Frontend
 npm install
 npm run dev
