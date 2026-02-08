@@ -72,16 +72,19 @@ export default function CreateAuction() {
                 freshnessScore: 85
             });
 
+            console.log('AI Response:', response); // Debug log
+
+            // Backend returns flat structure, not nested priceResult/visionResult
             setAiResult({
-                freshnessScore: response.visionResult?.freshnessScore || 85,
-                qualityGrade: response.visionResult?.qualityClassification || 'Good',
-                suggestedPrice: response.priceResult?.suggestedPrice,
-                minPrice: response.priceResult?.minPrice,
-                maxPrice: response.priceResult?.maxPrice,
-                bidIncrement: response.priceResult?.suggestedBidIncrement,
-                explanation: response.priceResult?.explanation,
-                confidence: response.priceResult?.confidence,
-                dataPointsUsed: response.priceResult?.dataPointsUsed
+                freshnessScore: 85, // Vision analysis not yet implemented
+                qualityGrade: 'Good',
+                suggestedPrice: response.suggestedPrice,
+                minPrice: response.minPrice,
+                maxPrice: response.maxPrice,
+                bidIncrement: response.bidIncrement,
+                explanation: response.explanation,
+                confidence: response.dataPointsUsed > 5 ? 'High' : response.dataPointsUsed > 2 ? 'Medium' : 'Low',
+                dataPointsUsed: response.dataPointsUsed
             });
 
         } catch (err) {

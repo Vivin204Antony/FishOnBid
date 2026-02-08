@@ -3,6 +3,7 @@ import { MapPin, Scale, Clock, ArrowRight, Zap } from 'lucide-react';
 
 /**
  * Enhanced Auction Card Component with Lucide Icons
+ * Automatically shows CLOSED status when auction time expires
  */
 export default function AuctionCard({ auction }) {
   const formatDate = (dateStr) => {
@@ -16,6 +17,18 @@ export default function AuctionCard({ auction }) {
       hour12: true
     });
   };
+
+  // Check if auction has expired based on endTime
+  const isAuctionActive = () => {
+    if (!auction.active) return false;
+    if (!auction.endTime) return auction.active;
+
+    const now = new Date();
+    const endTime = new Date(auction.endTime);
+    return now < endTime;
+  };
+
+  const isActive = isAuctionActive();
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden 
@@ -38,12 +51,12 @@ export default function AuctionCard({ auction }) {
               </span>
             </div>
           </div>
-          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${auction.active
+          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${isActive
               ? "bg-green-100 text-green-700 border border-green-200"
               : "bg-red-100 text-red-700 border border-red-200"
             }`}>
-            {auction.active && <Zap className="w-3 h-3" />}
-            {auction.active ? "LIVE" : "CLOSED"}
+            {isActive && <Zap className="w-3 h-3" />}
+            {isActive ? "LIVE" : "CLOSED"}
           </span>
         </div>
 
