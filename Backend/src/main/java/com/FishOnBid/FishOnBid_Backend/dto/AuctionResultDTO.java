@@ -3,7 +3,7 @@ package com.FishOnBid.FishOnBid_Backend.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -18,7 +18,7 @@ public class AuctionResultDTO {
     private String winnerEmail;
 
     private int totalBids;
-    private LocalDateTime endTime;
+    private Instant endTime;
 
     private List<BidSummaryDTO> bids;
 }

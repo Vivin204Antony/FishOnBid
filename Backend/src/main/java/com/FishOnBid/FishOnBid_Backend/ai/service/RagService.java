@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
@@ -31,7 +32,7 @@ public class RagService {
     public RagDataDTO fetchHistoricalData(String fishName, int daysBack) {
         log.info("RAG_FETCH_START: fishName={}, daysBack={}", fishName, daysBack);
         
-        LocalDateTime fromDate = LocalDateTime.now().minusDays(daysBack);
+        Instant fromDate = Instant.now().minus(daysBack, ChronoUnit.DAYS);
         List<Auction> auctions = auctionRepository.findRecentAuctions(fishName, fromDate);
 
         if (auctions.isEmpty()) {
@@ -87,7 +88,7 @@ public class RagService {
         log.info("RAG_FETCH_BY_LOCATION: fishName={}, location={}, daysBack={}", 
                 fishName, location, daysBack);
         
-        LocalDateTime fromDate = LocalDateTime.now().minusDays(daysBack);
+        Instant fromDate = Instant.now().minus(daysBack, ChronoUnit.DAYS);
         List<Auction> auctions = auctionRepository.findRecentAuctionsByLocation(
                 fishName, location, fromDate);
 

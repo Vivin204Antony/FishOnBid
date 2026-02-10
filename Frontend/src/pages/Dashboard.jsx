@@ -16,7 +16,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     activeAuctions: 0,
     totalBids: 0,
-    marketTrend: 'Stable'
+    marketTrend: 'Stable',
+    historicalPoints: 0
   });
   const [myAuctions, setMyAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,13 +25,18 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await api.get('/auctions/active');
-        setMyAuctions(response.data.slice(0, 3));
+        const [activeRes, allRes] = await Promise.all([
+          api.get('/auctions/active'),
+          api.get('/auctions')
+        ]);
+
+        setMyAuctions(activeRes.data.slice(0, 4));
 
         setStats({
-          activeAuctions: response.data.length,
-          totalBids: response.data.length * 4,
-          marketTrend: 'Upward'
+          activeAuctions: activeRes.data.length,
+          totalBids: activeRes.data.reduce((acc, curr) => acc + (curr.currentPrice > curr.startPrice ? 5 : 0), 0) || activeRes.data.length * 2,
+          marketTrend: 'Upward',
+          historicalPoints: allRes.data.length
         });
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -67,7 +73,7 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto px-6 -mt-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           <StatCard
             title="Live Auctions"
             value={stats.activeAuctions}
@@ -81,10 +87,16 @@ export default function Dashboard() {
             color="green"
           />
           <StatCard
+            title="AI Training Points"
+            value={stats.historicalPoints}
+            Icon={Activity}
+            color="indigo"
+          />
+          <StatCard
             title="Market Trend"
             value={stats.marketTrend}
             Icon={TrendingUp}
-            color="indigo"
+            color="orange"
           />
         </div>
 
@@ -165,6 +177,7 @@ function StatCard({ title, value, Icon, color }) {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
     indigo: 'bg-indigo-50 text-indigo-600',
+    orange: 'bg-orange-50 text-orange-600',
   };
 
   return (

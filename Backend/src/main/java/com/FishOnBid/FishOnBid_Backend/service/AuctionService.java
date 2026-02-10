@@ -1,5 +1,6 @@
 package com.FishOnBid.FishOnBid_Backend.service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -83,7 +84,7 @@ public class AuctionService {
                 .orElseThrow(() -> new RuntimeException("Auction not found"));
 
         // Auto-close check
-        if (LocalDateTime.now().isAfter(auction.getEndTime())) {
+        if (Instant.now().isAfter(auction.getEndTime())) {
             auction.setActive(false);
             auctionRepo.save(auction);
             throw new RuntimeException("Auction has ended");
@@ -104,7 +105,7 @@ public class AuctionService {
         bid.setAmount(amount);
         bid.setBidderEmail(email);
         bid.setAuction(auction);
-        bid.setBidTime(LocalDateTime.now());
+        bid.setBidTime(Instant.now()); 
 
         bidRepo.save(bid);
         auctionRepo.save(auction);

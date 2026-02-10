@@ -17,14 +17,16 @@ import org.springframework.stereotype.Service;
 public class AiPricingService {
 
     private final RagService ragService;
+    private final ExternalDataService externalDataService;
 
     // Configuration constants
     private static final double DEFAULT_BASE_PRICE = 500.0;
     private static final double CONFIDENCE_RANGE_PERCENT = 0.10; // 10%
     private static final int DEFAULT_LOOKBACK_DAYS = 7;
+    private static final double EXTERNAL_DATA_WEIGHT = 0.30; // 30% influence from Gov/External APIs
 
     /**
-     * Generate AI-assisted price suggestion using RAG.
+     * Generate AI-assisted price suggestion using RAG and External Insights.
      * 
      * @param request Price request with fish details
      * @return Price recommendation with confidence range
@@ -50,15 +52,18 @@ public class AiPricingService {
             );
         }
 
-        // Step 2: Calculate price based on RAG data
+        // Step 2: Fetch external market pulse
+        Double externalPrice = externalDataService.getExternalMarketPrice(request.fishName());
+
+        // Step 3: Calculate price based on RAG + External data
         AiPriceResponseDTO response;
         
-        if (!ragData.hasSufficientData()) {
+        if (!ragData.hasSufficientData() && externalPrice == null) {
             // Fallback to default pricing
             response = generateFallbackPrice(request, ragData);
         } else {
-            // Generate RAG-based price
-            response = generateRagBasedPrice(request, ragData);
+            // Generate RAG-based price (with external influence)
+            response = generateHybridPrice(request, ragData, externalPrice);
         }
 
         long processingTime = System.currentTimeMillis() - startTime;
@@ -69,18 +74,29 @@ public class AiPricingService {
     }
 
     /**
-     * Generate price based on historical auction data (RAG).
+     * Generate hybrid price based on historical data (RAG) and external market pulse.
      */
-    private AiPriceResponseDTO generateRagBasedPrice(
+    private AiPriceResponseDTO generateHybridPrice(
             AiPriceRequestDTO request,
-            RagDataDTO ragData
+            RagDataDTO ragData,
+            Double externalPrice
     ) {
-        double basePrice = ragData.averagePrice();
+        double internalBasePrice = ragData.hasSufficientData() ? ragData.averagePrice() : DEFAULT_BASE_PRICE;
+        double finalBasePrice;
+
+        if (externalPrice != null && ragData.hasSufficientData()) {
+            // Weighted average between internal and external
+            finalBasePrice = (internalBasePrice * (1.0 - EXTERNAL_DATA_WEIGHT)) + (externalPrice * EXTERNAL_DATA_WEIGHT);
+        } else if (externalPrice != null) {
+            finalBasePrice = externalPrice;
+        } else {
+            finalBasePrice = internalBasePrice;
+        }
 
         // Apply freshness score adjustment if provided
         if (request.freshnessScore() != null) {
             double freshnessMultiplier = calculateFreshnessMultiplier(request.freshnessScore());
-            basePrice *= freshnessMultiplier;
+            finalBasePrice *= freshnessMultiplier;
         }
 
         // Apply quantity adjustment (larger quantities may have different pricing)
@@ -88,28 +104,28 @@ public class AiPricingService {
             double quantityRatio = request.quantityKg() / ragData.averageQuantityKg();
             // Slight discount for larger quantities
             if (quantityRatio > 1.5) {
-                basePrice *= 0.95;
+                finalBasePrice *= 0.95;
             }
         }
 
-        double minPrice = Math.max(ragData.minPrice() * 0.9, basePrice * (1 - CONFIDENCE_RANGE_PERCENT));
-        double maxPrice = Math.min(ragData.maxPrice() * 1.1, basePrice * (1 + CONFIDENCE_RANGE_PERCENT));
+        double minPrice = finalBasePrice * (1 - CONFIDENCE_RANGE_PERCENT);
+        double maxPrice = finalBasePrice * (1 + CONFIDENCE_RANGE_PERCENT);
 
-        String explanation = String.format(
-                "Price derived from %d auctions in the last %d days. " +
-                "Average closing price: ₹%.2f/kg. Location: %s. Confidence: %s.",
-                ragData.auctionCount(),
-                DEFAULT_LOOKBACK_DAYS,
-                ragData.averagePrice(),
-                ragData.mostRecentLocation() != null ? ragData.mostRecentLocation() : "Global",
-                ragData.getConfidenceLevel()
-        );
+        StringBuilder explanation = new StringBuilder();
+        if (ragData.hasSufficientData()) {
+            explanation.append(String.format("Derived from %d past auctions (Avg: ₹%.2f). ", 
+                    ragData.auctionCount(), internalBasePrice));
+        }
+        if (externalPrice != null) {
+            explanation.append(String.format("Integrated external market pulse (₹%.2f). ", externalPrice));
+        }
+        explanation.append(String.format("Confidence: %s.", ragData.getConfidenceLevel()));
 
         return AiPriceResponseDTO.of(
-                Math.round(basePrice * 100.0) / 100.0,
+                Math.round(finalBasePrice * 100.0) / 100.0,
                 Math.round(minPrice * 100.0) / 100.0,
                 Math.round(maxPrice * 100.0) / 100.0,
-                explanation,
+                explanation.toString(),
                 ragData.auctionCount()
         );
     }

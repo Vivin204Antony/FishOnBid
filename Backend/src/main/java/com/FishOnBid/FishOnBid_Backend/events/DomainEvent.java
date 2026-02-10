@@ -1,7 +1,7 @@
 package com.FishOnBid.FishOnBid_Backend.events;
 
 import lombok.Getter;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Base class for all domain events.
@@ -12,12 +12,12 @@ public abstract class DomainEvent {
     
     private final String eventId;
     private final String eventType;
-    private final LocalDateTime timestamp;
+    private final Instant timestamp;
 
     protected DomainEvent(String eventType) {
         this.eventId = java.util.UUID.randomUUID().toString();
         this.eventType = eventType;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = Instant.now();
     }
 
     @Override

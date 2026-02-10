@@ -3,7 +3,7 @@ package com.FishOnBid.FishOnBid_Backend.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Data
@@ -16,7 +16,7 @@ public class Bid {
     private double amount;
     private String bidderEmail;
 
-    private LocalDateTime bidTime;
+    private Instant bidTime;
 
     @ManyToOne
     private Auction auction;

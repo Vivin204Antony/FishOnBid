@@ -3,7 +3,7 @@ package com.FishOnBid.FishOnBid_Backend.ai.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Entity for tracking AI decisions for audit and debugging.
@@ -32,12 +32,12 @@ public class AiDecisionLog {
     private Long processingTimeMs; // Performance metric
 
     @Column(nullable = false)
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     @PrePersist
     protected void onCreate() {
         if (timestamp == null) {
-            timestamp = LocalDateTime.now();
+            timestamp = Instant.now();
         }
     }
 }

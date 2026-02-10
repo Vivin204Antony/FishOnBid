@@ -30,7 +30,7 @@ class WebSocketService {
             return;
         }
 
-        const socket = new SockJS('http://localhost:8080/ws');
+        const socket = new SockJS('http://localhost:9001/ws');
         this.client = Stomp.over(socket);
 
         // Disable debug logging in production

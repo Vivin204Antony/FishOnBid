@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     """)
     List<Auction> findRecentAuctions(
             @Param("fishName") String fishName,
-            @Param("fromDate") LocalDateTime fromDate
+            @Param("fromDate") Instant fromDate
     );
 
     /**
@@ -54,7 +55,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findRecentAuctionsByLocation(
             @Param("fishName") String fishName,
             @Param("location") String location,
-            @Param("fromDate") LocalDateTime fromDate
+            @Param("fromDate") Instant fromDate
     );
 
     /**
@@ -89,6 +90,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     """)
     Double getAverageClosingPrice(
             @Param("fishName") String fishName,
-            @Param("fromDate") LocalDateTime fromDate
+            @Param("fromDate") Instant fromDate
     );
 }

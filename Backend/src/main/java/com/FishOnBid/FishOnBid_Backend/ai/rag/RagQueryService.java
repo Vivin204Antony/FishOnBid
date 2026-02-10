@@ -8,8 +8,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,7 +43,7 @@ public class RagQueryService {
      * Index all completed auctions into the vector store
      */
     public void indexCompletedAuctions() {
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        Instant thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS);
         
         List<Auction> completedAuctions = auctionRepository.findAll().stream()
                 .filter(a -> !a.isActive())
@@ -68,7 +69,7 @@ public class RagQueryService {
                 .avgPrice(auction.getCurrentPrice())
                 .quantityKg(auction.getQuantityKg() != null ? auction.getQuantityKg() : 0)
                 .timestamp(auction.getEndTime() != null 
-                        ? auction.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli()
+                        ? auction.getEndTime().toEpochMilli()
                         : System.currentTimeMillis())
                 .build();
     }

@@ -3,6 +3,7 @@ package com.FishOnBid.FishOnBid_Backend.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,8 +19,8 @@ public class Auction {
     private double startPrice;
     private double currentPrice;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private Instant startTime;
+    private Instant endTime;
 
     private boolean active;
 
