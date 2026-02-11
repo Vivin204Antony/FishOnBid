@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * RAG (Retrieval-Augmented Generation) Service.
  * Retrieves and aggregates historical auction data for AI pricing.
+ * Implements Strategy 4: Source-Weighted Intelligence.
  */
 @Service
 @RequiredArgsConstructor
@@ -40,10 +41,18 @@ public class RagService {
             return RagDataDTO.empty();
         }
 
-        double avgPrice = auctions.stream()
-                .mapToDouble(Auction::getCurrentPrice)
-                .average()
-                .orElse(0);
+        // Calculate weighted average (Strategy 4 Logic)
+        // GOVT_API/INSTITUTIONAL = 1.5 weight, Others = 1.0 weight
+        double totalWeightedPrice = 0;
+        double totalWeight = 0;
+
+        for (Auction a : auctions) {
+            double weight = (a.getDataSource() == Auction.AuctionDataSource.GOVT_INSTITUTIONAL_API) ? 1.5 : 1.0;
+            totalWeightedPrice += a.getCurrentPrice() * weight;
+            totalWeight += weight;
+        }
+
+        double avgPrice = totalWeight > 0 ? totalWeightedPrice / totalWeight : 0;
 
         double minPrice = auctions.stream()
                 .mapToDouble(Auction::getCurrentPrice)
@@ -97,10 +106,17 @@ public class RagService {
             return fetchHistoricalData(fishName, daysBack);
         }
 
-        double avgPrice = auctions.stream()
-                .mapToDouble(Auction::getCurrentPrice)
-                .average()
-                .orElse(0);
+        // Weighted local average
+        double totalWeightedPrice = 0;
+        double totalWeight = 0;
+
+        for (Auction a : auctions) {
+            double weight = (a.getDataSource() == Auction.AuctionDataSource.GOVT_INSTITUTIONAL_API) ? 1.5 : 1.0;
+            totalWeightedPrice += a.getCurrentPrice() * weight;
+            totalWeight += weight;
+        }
+
+        double avgPrice = totalWeight > 0 ? totalWeightedPrice / totalWeight : 0;
 
         double minPrice = auctions.stream()
                 .mapToDouble(Auction::getCurrentPrice)

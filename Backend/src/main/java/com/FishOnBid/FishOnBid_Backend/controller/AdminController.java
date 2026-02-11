@@ -53,6 +53,7 @@ public class AdminController {
                 auction.setStartTime(Instant.now().minus(12, ChronoUnit.HOURS));
             }
             
+            auction.setDataSource(Auction.AuctionDataSource.SYSTEM_GENERATED);
             return auction;
         }).collect(Collectors.toList());
 

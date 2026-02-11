@@ -4,11 +4,17 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Entity
 @Data
 public class Auction {
+
+    public enum AuctionDataSource {
+        USER_MANUAL,
+        SYSTEM_GENERATED,
+        GOVT_INSTITUTIONAL_API,
+        SIMULATED_DEMO
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,9 +69,12 @@ public class Auction {
     @Column(length = 500)
     private String sellerNotes;
 
-    /**
-     * AI-generated quality explanation text
-     */
     @Column(length = 1000)
     private String aiExplanation;
+
+    /**
+     * Source of the auction record (for RAG weighting)
+     */
+    @Enumerated(EnumType.STRING)
+    private AuctionDataSource dataSource = AuctionDataSource.USER_MANUAL;
 }

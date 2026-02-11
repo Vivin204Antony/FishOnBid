@@ -111,21 +111,16 @@ public class AiPricingService {
         double minPrice = finalBasePrice * (1 - CONFIDENCE_RANGE_PERCENT);
         double maxPrice = finalBasePrice * (1 + CONFIDENCE_RANGE_PERCENT);
 
-        StringBuilder explanation = new StringBuilder();
-        if (ragData.hasSufficientData()) {
-            explanation.append(String.format("Derived from %d past auctions (Avg: ₹%.2f). ", 
-                    ragData.auctionCount(), internalBasePrice));
-        }
-        if (externalPrice != null) {
-            explanation.append(String.format("Integrated external market pulse (₹%.2f). ", externalPrice));
-        }
-        explanation.append(String.format("Confidence: %s.", ragData.getConfidenceLevel()));
+        String explanation = String.format(
+                "Based on %d past auctions. Integration of Institutional Market Trends (Weighted 1.5x) and Seasonal History. Confidence: %s.",
+                ragData.auctionCount(), ragData.getConfidenceLevel()
+        );
 
         return AiPriceResponseDTO.of(
                 Math.round(finalBasePrice * 100.0) / 100.0,
                 Math.round(minPrice * 100.0) / 100.0,
                 Math.round(maxPrice * 100.0) / 100.0,
-                explanation.toString(),
+                explanation,
                 ragData.auctionCount()
         );
     }

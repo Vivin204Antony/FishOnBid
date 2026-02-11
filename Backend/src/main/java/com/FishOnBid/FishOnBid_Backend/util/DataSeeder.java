@@ -96,6 +96,7 @@ public class DataSeeder implements CommandLineRunner {
             auction.setEndTime(endTime);
         }
         
+        auction.setDataSource(Auction.AuctionDataSource.SYSTEM_GENERATED);
         return auction;
     }
 

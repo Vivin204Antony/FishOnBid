@@ -84,7 +84,7 @@ public class AuctionController {
 
     // 🔹 Get auction summary (auction + winner + bids)
     @GetMapping("/{id}/summary")
-    public Auction getAuctionSummary(@PathVariable Long id) {
-        return auctionService.getAuctionById(id);
+    public Map<String, Object> getAuctionSummary(@PathVariable Long id) {
+        return auctionService.getAuctionSummary(id);
     }
 }
