@@ -1,5 +1,6 @@
 package com.FishOnBid.FishOnBid_Backend.ai.service;
 
+import com.FishOnBid.FishOnBid_Backend.ai.dto.AiExplanationDTO;
 import com.FishOnBid.FishOnBid_Backend.ai.dto.AiPriceRequestDTO;
 import com.FishOnBid.FishOnBid_Backend.ai.dto.AiPriceResponseDTO;
 import com.FishOnBid.FishOnBid_Backend.ai.dto.RagDataDTO;
@@ -7,9 +8,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * AI Pricing Service implementing RAG-based price suggestions.
- * Uses historical auction data to generate intelligent price recommendations.
+ * Uses historical auction data to generate intelligent price recommendations
+ * with structured, farmer-facing AI explanations.
  */
 @Service
 @RequiredArgsConstructor
@@ -18,18 +23,16 @@ public class AiPricingService {
 
     private final RagService ragService;
     private final ExternalDataService externalDataService;
+    private final ExternalFisheriesService externalFisheriesService;
 
     // Configuration constants
     private static final double DEFAULT_BASE_PRICE = 500.0;
-    private static final double CONFIDENCE_RANGE_PERCENT = 0.10; // 10%
+    private static final double CONFIDENCE_RANGE_PERCENT = 0.10;
     private static final int DEFAULT_LOOKBACK_DAYS = 7;
-    private static final double EXTERNAL_DATA_WEIGHT = 0.30; // 30% influence from Gov/External APIs
+    private static final double EXTERNAL_DATA_WEIGHT = 0.30;
 
     /**
      * Generate AI-assisted price suggestion using RAG and External Insights.
-     * 
-     * @param request Price request with fish details
-     * @return Price recommendation with confidence range
      */
     public AiPriceResponseDTO generatePriceSuggestion(AiPriceRequestDTO request) {
         log.info("AI_REQUEST_START: fishName={}, quantity={}, location={}",
@@ -37,7 +40,7 @@ public class AiPricingService {
 
         long startTime = System.currentTimeMillis();
 
-        // Step 1: Retrieve historical data (RAG)
+        // Step 1: Retrieve historical data (RAG with Dynamic Trust)
         RagDataDTO ragData;
         if (request.location() != null && !request.location().isBlank()) {
             ragData = ragService.fetchHistoricalDataByLocation(
@@ -57,12 +60,10 @@ public class AiPricingService {
 
         // Step 3: Calculate price based on RAG + External data
         AiPriceResponseDTO response;
-        
+
         if (!ragData.hasSufficientData() && externalPrice == null) {
-            // Fallback to default pricing
             response = generateFallbackPrice(request, ragData);
         } else {
-            // Generate RAG-based price (with external influence)
             response = generateHybridPrice(request, ragData, externalPrice);
         }
 
@@ -74,7 +75,7 @@ public class AiPricingService {
     }
 
     /**
-     * Generate hybrid price based on historical data (RAG) and external market pulse.
+     * Generate hybrid price with structured explanation breakdown.
      */
     private AiPriceResponseDTO generateHybridPrice(
             AiPriceRequestDTO request,
@@ -85,7 +86,6 @@ public class AiPricingService {
         double finalBasePrice;
 
         if (externalPrice != null && ragData.hasSufficientData()) {
-            // Weighted average between internal and external
             finalBasePrice = (internalBasePrice * (1.0 - EXTERNAL_DATA_WEIGHT)) + (externalPrice * EXTERNAL_DATA_WEIGHT);
         } else if (externalPrice != null) {
             finalBasePrice = externalPrice;
@@ -93,36 +93,62 @@ public class AiPricingService {
             finalBasePrice = internalBasePrice;
         }
 
-        // Apply freshness score adjustment if provided
+        // Apply freshness score adjustment
         if (request.freshnessScore() != null) {
             double freshnessMultiplier = calculateFreshnessMultiplier(request.freshnessScore());
             finalBasePrice *= freshnessMultiplier;
         }
 
-        // Apply quantity adjustment (larger quantities may have different pricing)
+        // Apply quantity adjustment
         if (request.quantityKg() > 0 && ragData.averageQuantityKg() > 0) {
             double quantityRatio = request.quantityKg() / ragData.averageQuantityKg();
-            // Slight discount for larger quantities
             if (quantityRatio > 1.5) {
                 finalBasePrice *= 0.95;
             }
         }
 
-        double minPrice = finalBasePrice * (1 - CONFIDENCE_RANGE_PERCENT);
-        double maxPrice = finalBasePrice * (1 + CONFIDENCE_RANGE_PERCENT);
+        double suggestedPrice = Math.round(finalBasePrice * 100.0) / 100.0;
+        double minPrice = Math.round(finalBasePrice * (1 - CONFIDENCE_RANGE_PERCENT) * 100.0) / 100.0;
+        double maxPrice = Math.round(finalBasePrice * (1 + CONFIDENCE_RANGE_PERCENT) * 100.0) / 100.0;
+
+        // Build structured explanation
+        String dataFreshness = externalFisheriesService.getDataFreshness();
+
+        Map<String, Double> sourceWeights = new LinkedHashMap<>();
+        sourceWeights.put("Govt OGD (1.5x Trust)", 1.5);
+        sourceWeights.put("Platform History (1.0x)", 1.0);
+        sourceWeights.put("Demo Data (0.5x)", 0.5);
+
+        String locationCtx = ragData.mostRecentLocation() != null
+                ? ragData.mostRecentLocation()
+                : (request.location() != null ? request.location() : "All Harbors");
+
+        AiExplanationDTO breakdown = new AiExplanationDTO(
+                String.format("₹%.0f based on %d verified records", suggestedPrice, ragData.auctionCount()),
+                ragData.auctionCount(),
+                ragData.govtRecordCount(),
+                ragData.historicalRecordCount(),
+                ragData.govtAveragePrice(),
+                ragData.historicalAveragePrice(),
+                ragData.dateRange(),
+                ragData.getConfidenceLevel(),
+                locationCtx,
+                dataFreshness,
+                sourceWeights
+        );
 
         String explanation = String.format(
-                "Based on %d past auctions. Integration of Institutional Market Trends (Weighted 1.5x) and Seasonal History. Confidence: %s.",
-                ragData.auctionCount(), ragData.getConfidenceLevel()
+                "Based on %d records (%d Govt, %d Historical). " +
+                "Dynamic Trust Weighted (Time-Decay + Source Authority). " +
+                "Govt Avg: ₹%.0f | Historical Avg: ₹%.0f. " +
+                "Confidence: %s. Data: %s.",
+                ragData.auctionCount(), ragData.govtRecordCount(), ragData.historicalRecordCount(),
+                ragData.govtAveragePrice(), ragData.historicalAveragePrice(),
+                ragData.getConfidenceLevel(), dataFreshness
         );
 
-        return AiPriceResponseDTO.of(
-                Math.round(finalBasePrice * 100.0) / 100.0,
-                Math.round(minPrice * 100.0) / 100.0,
-                Math.round(maxPrice * 100.0) / 100.0,
-                explanation,
-                ragData.auctionCount()
-        );
+        return AiPriceResponseDTO.of(suggestedPrice, minPrice, maxPrice, explanation,
+                ragData.auctionCount(), breakdown);
     }
 
     /**
@@ -134,39 +160,32 @@ public class AiPricingService {
     ) {
         double basePrice = DEFAULT_BASE_PRICE;
 
-        // Apply freshness adjustment if available
         if (request.freshnessScore() != null) {
             double freshnessMultiplier = calculateFreshnessMultiplier(request.freshnessScore());
             basePrice *= freshnessMultiplier;
         }
 
-        double minPrice = basePrice * (1 - CONFIDENCE_RANGE_PERCENT);
-        double maxPrice = basePrice * (1 + CONFIDENCE_RANGE_PERCENT);
+        double suggestedPrice = Math.round(basePrice * 100.0) / 100.0;
+        double minPrice = Math.round(basePrice * (1 - CONFIDENCE_RANGE_PERCENT) * 100.0) / 100.0;
+        double maxPrice = Math.round(basePrice * (1 + CONFIDENCE_RANGE_PERCENT) * 100.0) / 100.0;
 
         String explanation = String.format(
                 "Limited historical data available (%d auctions). " +
                 "Using market baseline estimate for %s. " +
                 "Consider adjusting based on local market conditions.",
-                ragData.auctionCount(),
-                request.fishName()
+                ragData.auctionCount(), request.fishName()
         );
 
-        return AiPriceResponseDTO.of(
-                Math.round(basePrice * 100.0) / 100.0,
-                Math.round(minPrice * 100.0) / 100.0,
-                Math.round(maxPrice * 100.0) / 100.0,
-                explanation,
-                ragData.auctionCount()
-        );
+        AiExplanationDTO breakdown = AiExplanationDTO.fallback(request.fishName());
+
+        return AiPriceResponseDTO.of(suggestedPrice, minPrice, maxPrice, explanation,
+                ragData.auctionCount(), breakdown);
     }
 
     /**
      * Calculate price multiplier based on freshness score.
-     * Higher freshness = higher price.
      */
     private double calculateFreshnessMultiplier(int freshnessScore) {
-        // Scale: 0-100 score maps to 0.8-1.2 multiplier
-        // 50 = neutral (1.0), 100 = premium (1.2), 0 = discount (0.8)
         return 0.8 + (freshnessScore / 100.0) * 0.4;
     }
 }

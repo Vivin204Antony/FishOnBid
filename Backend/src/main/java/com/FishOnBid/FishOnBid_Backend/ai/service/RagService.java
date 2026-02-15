@@ -8,13 +8,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
  * RAG (Retrieval-Augmented Generation) Service.
  * Retrieves and aggregates historical auction data for AI pricing.
- * Implements Strategy 4: Source-Weighted Intelligence.
+ * Implements Dynamic Trust Formula: TrustScore = BaseWeight × RecencyDecay × DataVolumeFactor
  */
 @Service
 @RequiredArgsConstructor
@@ -23,16 +26,17 @@ public class RagService {
 
     private final AuctionRepository auctionRepository;
 
+    // Time-decay parameter (λ): higher = faster decay
+    private static final double RECENCY_DECAY_LAMBDA = 0.05;
+    // Minimum sample size for full confidence
+    private static final double DATA_VOLUME_THRESHOLD = 50.0;
+
     /**
-     * Fetch historical auction statistics for a specific fish type.
-     * 
-     * @param fishName The type of fish to search for
-     * @param daysBack Number of days to look back
-     * @return Aggregated statistics from historical auctions
+     * Fetch historical auction statistics with dynamic trust weighting.
      */
     public RagDataDTO fetchHistoricalData(String fishName, int daysBack) {
         log.info("RAG_FETCH_START: fishName={}, daysBack={}", fishName, daysBack);
-        
+
         Instant fromDate = Instant.now().minus(daysBack, ChronoUnit.DAYS);
         List<Auction> auctions = auctionRepository.findRecentAuctions(fishName, fromDate);
 
@@ -41,62 +45,16 @@ public class RagService {
             return RagDataDTO.empty();
         }
 
-        // Calculate weighted average (Strategy 4 Logic)
-        // GOVT_API/INSTITUTIONAL = 1.5 weight, Others = 1.0 weight
-        double totalWeightedPrice = 0;
-        double totalWeight = 0;
-
-        for (Auction a : auctions) {
-            double weight = (a.getDataSource() == Auction.AuctionDataSource.GOVT_INSTITUTIONAL_API) ? 1.5 : 1.0;
-            totalWeightedPrice += a.getCurrentPrice() * weight;
-            totalWeight += weight;
-        }
-
-        double avgPrice = totalWeight > 0 ? totalWeightedPrice / totalWeight : 0;
-
-        double minPrice = auctions.stream()
-                .mapToDouble(Auction::getCurrentPrice)
-                .min()
-                .orElse(0);
-
-        double maxPrice = auctions.stream()
-                .mapToDouble(Auction::getCurrentPrice)
-                .max()
-                .orElse(0);
-
-        double avgQuantity = auctions.stream()
-                .mapToDouble(a -> a.getQuantityKg() != null ? a.getQuantityKg() : 0)
-                .average()
-                .orElse(0);
-
-        String mostRecentLocation = auctions.stream()
-                .filter(a -> a.getLocation() != null)
-                .findFirst()
-                .map(Auction::getLocation)
-                .orElse(null);
-
-        RagDataDTO result = new RagDataDTO(
-                auctions.size(),
-                avgPrice,
-                minPrice,
-                maxPrice,
-                avgQuantity,
-                mostRecentLocation
-        );
-
-        log.info("RAG_DATA_RETRIEVED: count={}, avgPrice={}, confidence={}",
-                result.auctionCount(), result.averagePrice(), result.getConfidenceLevel());
-
-        return result;
+        return buildRagData(auctions, daysBack);
     }
 
     /**
-     * Fetch historical data filtered by location for more accurate pricing.
+     * Fetch historical data filtered by location.
      */
     public RagDataDTO fetchHistoricalDataByLocation(String fishName, String location, int daysBack) {
-        log.info("RAG_FETCH_BY_LOCATION: fishName={}, location={}, daysBack={}", 
+        log.info("RAG_FETCH_BY_LOCATION: fishName={}, location={}, daysBack={}",
                 fishName, location, daysBack);
-        
+
         Instant fromDate = Instant.now().minus(daysBack, ChronoUnit.DAYS);
         List<Auction> auctions = auctionRepository.findRecentAuctionsByLocation(
                 fishName, location, fromDate);
@@ -106,40 +64,101 @@ public class RagService {
             return fetchHistoricalData(fishName, daysBack);
         }
 
-        // Weighted local average
+        return buildRagData(auctions, daysBack);
+    }
+
+    /**
+     * Core RAG aggregation with Dynamic Trust Formula.
+     * TrustScore = BaseWeight × RecencyDecay × DataVolumeFactor
+     */
+    private RagDataDTO buildRagData(List<Auction> auctions, int daysBack) {
         double totalWeightedPrice = 0;
         double totalWeight = 0;
 
+        // Source-level tracking
+        int govtCount = 0;
+        double govtTotal = 0;
+        int histCount = 0;
+        double histTotal = 0;
+
+        Instant now = Instant.now();
+        int totalRecords = auctions.size();
+        double dataVolumeFactor = Math.min(1.0, totalRecords / DATA_VOLUME_THRESHOLD);
+
         for (Auction a : auctions) {
-            double weight = (a.getDataSource() == Auction.AuctionDataSource.GOVT_INSTITUTIONAL_API) ? 1.5 : 1.0;
-            totalWeightedPrice += a.getCurrentPrice() * weight;
-            totalWeight += weight;
+            // 1. Base Weight by source
+            double baseWeight;
+            boolean isGovt = (a.getDataSource() == Auction.AuctionDataSource.GOVT_INSTITUTIONAL_API);
+            if (isGovt) {
+                baseWeight = 1.5;
+            } else if (a.getDataSource() == Auction.AuctionDataSource.SIMULATED_DEMO) {
+                baseWeight = 0.5;
+            } else {
+                baseWeight = 1.0;
+            }
+
+            // 2. Recency Decay: e^(-λ × daysOld)
+            double daysOld = a.getStartTime() != null
+                    ? ChronoUnit.DAYS.between(a.getStartTime(), now)
+                    : daysBack;
+            double recencyDecay = Math.exp(-RECENCY_DECAY_LAMBDA * Math.max(0, daysOld));
+
+            // 3. Dynamic Trust = Base × Recency × DataVolume
+            double dynamicWeight = baseWeight * recencyDecay * dataVolumeFactor;
+
+            totalWeightedPrice += a.getCurrentPrice() * dynamicWeight;
+            totalWeight += dynamicWeight;
+
+            // Track source breakdown
+            if (isGovt) {
+                govtCount++;
+                govtTotal += a.getCurrentPrice();
+            } else {
+                histCount++;
+                histTotal += a.getCurrentPrice();
+            }
         }
 
         double avgPrice = totalWeight > 0 ? totalWeightedPrice / totalWeight : 0;
 
         double minPrice = auctions.stream()
                 .mapToDouble(Auction::getCurrentPrice)
-                .min()
-                .orElse(0);
-
+                .min().orElse(0);
         double maxPrice = auctions.stream()
                 .mapToDouble(Auction::getCurrentPrice)
-                .max()
-                .orElse(0);
-
+                .max().orElse(0);
         double avgQuantity = auctions.stream()
                 .mapToDouble(a -> a.getQuantityKg() != null ? a.getQuantityKg() : 0)
-                .average()
-                .orElse(0);
+                .average().orElse(0);
 
-        return new RagDataDTO(
-                auctions.size(),
-                avgPrice,
-                minPrice,
-                maxPrice,
-                avgQuantity,
-                location
+        String location = auctions.stream()
+                .filter(a -> a.getLocation() != null)
+                .findFirst()
+                .map(Auction::getLocation)
+                .orElse(null);
+
+        // Build date range string
+        LocalDate fromLocal = Instant.now().minus(daysBack, ChronoUnit.DAYS)
+                .atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate toLocal = LocalDate.now();
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MMM d");
+        String dateRange = fmt.format(fromLocal) + " – " + fmt.format(toLocal) + ", "
+                + toLocal.getYear();
+
+        double govtAvg = govtCount > 0 ? govtTotal / govtCount : 0;
+        double histAvg = histCount > 0 ? histTotal / histCount : 0;
+
+        RagDataDTO result = new RagDataDTO(
+                totalRecords, avgPrice, minPrice, maxPrice, avgQuantity, location,
+                govtCount, Math.round(govtAvg * 100.0) / 100.0,
+                histCount, Math.round(histAvg * 100.0) / 100.0,
+                dateRange
         );
+
+        log.info("RAG_DATA_RETRIEVED: count={}, avgPrice={}, govtCount={}, histCount={}, confidence={}, dataVolumeFactor={}",
+                result.auctionCount(), result.averagePrice(), govtCount, histCount,
+                result.getConfidenceLevel(), String.format("%.2f", dataVolumeFactor));
+
+        return result;
     }
 }

@@ -2,7 +2,7 @@ package com.FishOnBid.FishOnBid_Backend.ai.dto;
 
 /**
  * DTO for RAG (Retrieval-Augmented Generation) statistics.
- * Contains aggregated historical auction data.
+ * Contains aggregated historical auction data with source breakdown.
  */
 public record RagDataDTO(
     int auctionCount,
@@ -10,7 +10,12 @@ public record RagDataDTO(
     double minPrice,
     double maxPrice,
     double averageQuantityKg,
-    String mostRecentLocation
+    String mostRecentLocation,
+    int govtRecordCount,
+    double govtAveragePrice,
+    int historicalRecordCount,
+    double historicalAveragePrice,
+    String dateRange
 ) {
     /**
      * Check if sufficient data exists for reliable pricing
@@ -33,6 +38,6 @@ public record RagDataDTO(
      * Empty result when no data found
      */
     public static RagDataDTO empty() {
-        return new RagDataDTO(0, 0, 0, 0, 0, null);
+        return new RagDataDTO(0, 0, 0, 0, 0, null, 0, 0, 0, 0, "N/A");
     }
 }

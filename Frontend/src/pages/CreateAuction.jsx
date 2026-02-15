@@ -5,8 +5,8 @@ import aiService from '../api/aiService';
 import { AuthContext } from '../context/AuthContext';
 import {
     Fish, MapPin, Scale, Camera, FileText, Clock, Sparkles,
-    CheckCircle2, AlertCircle, Loader2, Rocket, TrendingUp,
-    Info, BadgeCheck, ThumbsUp
+    CheckCircle2, AlertCircle, Loader2, Rocket,
+    Info, ThumbsUp
 } from 'lucide-react';
 
 /**
@@ -76,15 +76,13 @@ export default function CreateAuction() {
 
             // Backend returns flat structure, not nested priceResult/visionResult
             setAiResult({
-                freshnessScore: 85, // Vision analysis not yet implemented
-                qualityGrade: 'Good',
                 suggestedPrice: response.suggestedPrice,
                 minPrice: response.minPrice,
                 maxPrice: response.maxPrice,
                 bidIncrement: response.bidIncrement,
                 explanation: response.explanation,
-                confidence: response.dataPointsUsed > 5 ? 'High' : response.dataPointsUsed > 2 ? 'Medium' : 'Low',
-                dataPointsUsed: response.dataPointsUsed
+                dataPointsUsed: response.dataPointsUsed,
+                breakdown: response.breakdown || null
             });
 
         } catch (err) {
@@ -345,39 +343,11 @@ export default function CreateAuction() {
 
                                     {aiResult && (
                                         <div className="space-y-4 mt-4">
-                                            {/* Metrics */}
-                                            <div className="flex items-center gap-4">
-                                                <div className="bg-white rounded-lg p-3 flex-1">
-                                                    <p className="text-xs text-gray-500 uppercase flex items-center gap-1">
-                                                        <TrendingUp className="w-3 h-3" /> Freshness
-                                                    </p>
-                                                    <p className="text-2xl font-black text-green-600">
-                                                        {aiResult.freshnessScore}%
-                                                    </p>
-                                                </div>
-                                                <div className="bg-white rounded-lg p-3 flex-1">
-                                                    <p className="text-xs text-gray-500 uppercase flex items-center gap-1">
-                                                        <BadgeCheck className="w-3 h-3" /> Quality
-                                                    </p>
-                                                    <p className="text-lg font-bold text-indigo-600">
-                                                        {aiResult.qualityGrade}
-                                                    </p>
-                                                </div>
-                                                <div className="bg-white rounded-lg p-3 flex-1">
-                                                    <p className="text-xs text-gray-500 uppercase flex items-center gap-1">
-                                                        <Info className="w-3 h-3" /> Confidence
-                                                    </p>
-                                                    <p className="text-lg font-bold text-blue-600">
-                                                        {aiResult.confidence || 'Medium'}
-                                                    </p>
-                                                </div>
-                                            </div>
-
                                             {/* Price Recommendation */}
                                             <div className="bg-white rounded-lg p-4">
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <p className="text-sm text-gray-500">Recommended Price</p>
+                                                        <p className="text-sm text-gray-500">AI Recommended Price</p>
                                                         <p className="text-3xl font-black text-green-700">
                                                             ₹{aiResult.suggestedPrice?.toFixed(2)}
                                                             <span className="text-sm font-normal text-gray-400 ml-1">/kg</span>
@@ -389,7 +359,7 @@ export default function CreateAuction() {
                                                     <button
                                                         type="button"
                                                         onClick={handleAcceptAiPrice}
-                                                        className="px-6 py-3 bg-green-600 text-white rounded-xl 
+                                                        className="px-6 py-3 bg-green-600 text-white rounded-xl
                                                                    font-bold hover:bg-green-700 transition-all flex items-center gap-2"
                                                     >
                                                         <ThumbsUp className="w-4 h-4" /> Accept Price
@@ -397,27 +367,89 @@ export default function CreateAuction() {
                                                 </div>
                                             </div>
 
-                                            {/* Explanation */}
-                                            {aiResult.explanation && (
+                                            {/* Structured AI Breakdown */}
+                                            {aiResult.breakdown && (
+                                                <div className="bg-white rounded-xl p-4 border border-indigo-100 space-y-3">
+                                                    <p className="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-2">
+                                                        <Info className="w-3 h-3" /> AI Price Breakdown
+                                                    </p>
+
+                                                    {/* Source Split */}
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-100">
+                                                            <p className="text-xs text-emerald-600 font-bold flex items-center gap-1">
+                                                                🏛️ Govt Market (OGD)
+                                                            </p>
+                                                            <p className="text-xl font-black text-emerald-700">
+                                                                {aiResult.breakdown.govtAvgPrice > 0
+                                                                    ? `₹${aiResult.breakdown.govtAvgPrice.toFixed(0)}`
+                                                                    : 'N/A'}
+                                                            </p>
+                                                            <p className="text-xs text-emerald-500">
+                                                                {aiResult.breakdown.govtRecords} records (1.5x trust)
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                                                            <p className="text-xs text-blue-600 font-bold flex items-center gap-1">
+                                                                📈 Platform History
+                                                            </p>
+                                                            <p className="text-xl font-black text-blue-700">
+                                                                {aiResult.breakdown.historicalAvgPrice > 0
+                                                                    ? `₹${aiResult.breakdown.historicalAvgPrice.toFixed(0)}`
+                                                                    : 'N/A'}
+                                                            </p>
+                                                            <p className="text-xs text-blue-500">
+                                                                {aiResult.breakdown.historicalRecords} records (1.0x)
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Metadata Row */}
+                                                    <div className="grid grid-cols-3 gap-2 text-center">
+                                                        <div className="bg-gray-50 rounded-lg p-2">
+                                                            <p className="text-xs text-gray-500">📍 Location</p>
+                                                            <p className="text-sm font-bold text-gray-700">
+                                                                {aiResult.breakdown.locationContext || 'All'}
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-gray-50 rounded-lg p-2">
+                                                            <p className="text-xs text-gray-500">📅 Period</p>
+                                                            <p className="text-sm font-bold text-gray-700">
+                                                                {aiResult.breakdown.dateRange || 'N/A'}
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-gray-50 rounded-lg p-2">
+                                                            <p className="text-xs text-gray-500">🎯 Confidence</p>
+                                                            <p className={`text-sm font-bold ${aiResult.breakdown.confidenceLevel === 'HIGH' ? 'text-green-600'
+                                                                : aiResult.breakdown.confidenceLevel === 'MEDIUM' ? 'text-yellow-600'
+                                                                    : 'text-red-600'
+                                                                }`}>
+                                                                {aiResult.breakdown.confidenceLevel}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Data Freshness */}
+                                                    <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2 text-center">
+                                                        {aiResult.breakdown.dataFreshness}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Fallback: legacy explanation */}
+                                            {!aiResult.breakdown && aiResult.explanation && (
                                                 <div className="bg-white rounded-lg p-4 border-l-4 border-indigo-500">
                                                     <p className="text-xs text-gray-500 uppercase mb-1 font-bold flex items-center gap-1">
                                                         <Info className="w-3 h-3" /> AI Explanation
                                                     </p>
-                                                    <p className="text-sm text-gray-700">
-                                                        {aiResult.explanation}
-                                                    </p>
-                                                    {aiResult.dataPointsUsed > 0 && (
-                                                        <p className="text-xs text-gray-400 mt-2">
-                                                            Based on {aiResult.dataPointsUsed} recent similar auctions
-                                                        </p>
-                                                    )}
+                                                    <p className="text-sm text-gray-700">{aiResult.explanation}</p>
                                                 </div>
                                             )}
 
                                             <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-2">
                                                 <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded flex items-center gap-1">
-                                                    <Sparkles className="w-3 h-3" /> AI-Suggested
-                                                </span> — This is a recommendation, not final authority
+                                                    <Sparkles className="w-3 h-3" /> Dynamic Trust Weighted
+                                                </span> — AI recommendation using {aiResult.dataPointsUsed} verified records
                                             </p>
                                         </div>
                                     )}
