@@ -176,7 +176,19 @@ public class AiPricingService {
                 ragData.auctionCount(), request.fishName()
         );
 
-        AiExplanationDTO breakdown = AiExplanationDTO.fallback(request.fishName());
+        AiExplanationDTO breakdown = new AiExplanationDTO(
+                String.format("₹%.0f (Market Baseline Estimate)", suggestedPrice),
+                ragData.auctionCount(),
+                ragData.govtRecordCount(),
+                ragData.historicalRecordCount(),
+                ragData.govtAveragePrice(),
+                ragData.historicalAveragePrice(),
+                ragData.dateRange(),
+                ragData.getConfidenceLevel(),
+                request.location() != null ? request.location() : "Unknown",
+                externalFisheriesService.getDataFreshness(),
+                new LinkedHashMap<>()
+        );
 
         return AiPriceResponseDTO.of(suggestedPrice, minPrice, maxPrice, explanation,
                 ragData.auctionCount(), breakdown);

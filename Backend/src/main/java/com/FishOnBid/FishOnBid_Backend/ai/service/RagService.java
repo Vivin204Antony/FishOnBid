@@ -60,10 +60,11 @@ public class RagService {
                 fishName, location, fromDate);
 
         if (auctions.isEmpty()) {
-            log.info("RAG_NO_LOCAL_DATA: Falling back to global data for {}", fishName);
+            log.info("RAG_NO_LOCAL_DATA: No auctions found for fish='{}' at location='{}'. Falling back to global.", fishName, location);
             return fetchHistoricalData(fishName, daysBack);
         }
 
+        log.info("RAG_LOCAL_DATA_FOUND: Found {} auctions for fish='{}' at location='{}'", auctions.size(), fishName, location);
         return buildRagData(auctions, daysBack);
     }
 
