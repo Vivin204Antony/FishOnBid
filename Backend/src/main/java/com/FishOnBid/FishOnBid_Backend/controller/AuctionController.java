@@ -70,7 +70,6 @@ public class AuctionController {
             @RequestBody Map<String, Double> request,
             @RequestHeader("Authorization") String authHeader
     ) {
-        String token = authHeader.substring(7);
         String email = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication().getName();
         double amount = request.get("amount");
