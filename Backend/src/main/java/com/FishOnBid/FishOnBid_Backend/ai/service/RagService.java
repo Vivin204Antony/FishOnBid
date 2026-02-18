@@ -50,6 +50,7 @@ public class RagService {
 
     /**
      * Fetch historical data filtered by location.
+     * If no government records found for specific fish type, queries generic "Fish" govt data as fallback.
      */
     public RagDataDTO fetchHistoricalDataByLocation(String fishName, String location, int daysBack) {
         log.info("RAG_FETCH_BY_LOCATION: fishName={}, location={}, daysBack={}",
@@ -59,12 +60,43 @@ public class RagService {
         List<Auction> auctions = auctionRepository.findRecentAuctionsByLocation(
                 fishName, location, fromDate);
 
+        // Check if we have any government data for this specific fish type
+        long govtCount = auctions.stream()
+                .filter(a -> a.getDataSource() == Auction.AuctionDataSource.GOVT_INSTITUTIONAL_API)
+                .count();
+
+        // If no government data for specific fish at this location, try generic "Fish" at same location
+        if (govtCount == 0 && !"Fish".equals(fishName)) {
+            log.info("RAG_NO_GOVT_DATA_FOR_SPECIFIC_FISH: Querying generic Fish govt data at location='{}'", location);
+            List<Auction> genericGovtData = auctionRepository.findGenericFishGovtData(location, fromDate);
+            
+            if (!genericGovtData.isEmpty()) {
+                log.info("RAG_GENERIC_GOVT_DATA_FOUND: Found {} generic Fish govt records at location='{}'", 
+                        genericGovtData.size(), location);
+                auctions.addAll(genericGovtData);
+            } else {
+                // If no local govt data, use nationwide generic Fish data as baseline reference
+                log.info("RAG_NO_LOCAL_GOVT_DATA: Querying nationwide generic Fish govt data as baseline");
+                List<Auction> nationwideGovtData = auctionRepository.findRecentAuctions("Fish", fromDate);
+                List<Auction> govtOnly = nationwideGovtData.stream()
+                        .filter(a -> a.getDataSource() == Auction.AuctionDataSource.GOVT_INSTITUTIONAL_API)
+                        .limit(20) // Limit to 20 records for performance
+                        .toList();
+                if (!govtOnly.isEmpty()) {
+                    log.info("RAG_NATIONWIDE_GOVT_DATA_FOUND: Using {} nationwide Fish govt records as baseline", 
+                            govtOnly.size());
+                    auctions.addAll(govtOnly);
+                }
+            }
+        }
+
         if (auctions.isEmpty()) {
             log.info("RAG_NO_LOCAL_DATA: No auctions found for fish='{}' at location='{}'. Falling back to global.", fishName, location);
             return fetchHistoricalData(fishName, daysBack);
         }
 
-        log.info("RAG_LOCAL_DATA_FOUND: Found {} auctions for fish='{}' at location='{}'", auctions.size(), fishName, location);
+        log.info("RAG_LOCAL_DATA_FOUND: Found {} total auctions (including fallback) for fish='{}' at location='{}'", 
+                auctions.size(), fishName, location);
         return buildRagData(auctions, daysBack);
     }
 

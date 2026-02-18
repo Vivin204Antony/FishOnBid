@@ -2,21 +2,27 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import AuctionCard from "../components/AuctionCard";
 import { Link } from "react-router-dom";
-import { Fish, Search, Filter, SlidersHorizontal, Rocket, Ship, Loader2 } from 'lucide-react';
+import { Fish, Search, Filter, SlidersHorizontal, Rocket, Ship, Loader2, Activity, Archive } from 'lucide-react';
 
 /**
- * Enhanced Auctions Page with Lucide Icons
+ * Enhanced Auctions Page with Live/Closed Tabs and Lucide Icons
  */
 export default function Auctions() {
-  const [auctions, setAuctions] = useState([]);
+  const [liveAuctions, setLiveAuctions] = useState([]);
+  const [closedAuctions, setClosedAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("live"); // "live" or "closed"
 
   useEffect(() => {
     const fetchAuctions = async () => {
       try {
-        const res = await api.get("/auctions/active");
-        setAuctions(res.data);
+        const [liveRes, closedRes] = await Promise.all([
+          api.get("/auctions/live"),
+          api.get("/auctions/closed")
+        ]);
+        setLiveAuctions(liveRes.data);
+        setClosedAuctions(closedRes.data);
       } catch (err) {
         console.error("Failed to fetch auctions:", err);
       } finally {
@@ -27,7 +33,9 @@ export default function Auctions() {
     fetchAuctions();
   }, []);
 
-  const filteredAuctions = auctions.filter(a =>
+  const currentAuctions = activeTab === "live" ? liveAuctions : closedAuctions;
+  
+  const filteredAuctions = currentAuctions.filter(a =>
     a.fishName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     a.location?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -58,6 +66,42 @@ export default function Auctions() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 -mt-8">
+        {/* Tabs */}
+        <div className="bg-white rounded-2xl shadow-xl mb-6 p-2 flex gap-2">
+          <button
+            onClick={() => setActiveTab("live")}
+            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+              activeTab === "live"
+                ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <Activity className="w-5 h-5" />
+            Live Auctions
+            <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${
+              activeTab === "live" ? "bg-white/20" : "bg-gray-200"
+            }`}>
+              {liveAuctions.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab("closed")}
+            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+              activeTab === "closed"
+                ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <Archive className="w-5 h-5" />
+            Closed Auctions
+            <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${
+              activeTab === "closed" ? "bg-white/20" : "bg-gray-200"
+            }`}>
+              {closedAuctions.length}
+            </span>
+          </button>
+        </div>
+
         {/* Search and Filters Bar */}
         <div className="bg-white rounded-2xl shadow-xl p-4 mb-10 flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
@@ -84,7 +128,7 @@ export default function Auctions() {
         {/* Results Info */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-500 font-medium">
-            Showing {filteredAuctions.length} live auction{filteredAuctions.length !== 1 ? 's' : ''}
+            Showing {filteredAuctions.length} {activeTab === "live" ? "live" : "closed"} auction{filteredAuctions.length !== 1 ? 's' : ''}
           </p>
         </div>
 
@@ -102,11 +146,15 @@ export default function Auctions() {
         ) : (
           <div className="bg-white rounded-3xl p-16 text-center border-2 border-dashed border-gray-200 shadow-sm">
             <Ship className="w-16 h-16 mx-auto text-gray-300 mb-6" />
-            <h3 className="text-2xl font-black text-gray-800 mb-3">No live auctions found</h3>
+            <h3 className="text-2xl font-black text-gray-800 mb-3">
+              {activeTab === "live" ? "No live auctions found" : "No closed auctions found"}
+            </h3>
             <p className="text-gray-500 max-w-md mx-auto mb-8 text-lg">
               {searchTerm
                 ? `We couldn't find any results for "${searchTerm}". Try a different search term.`
-                : "The harbor is quiet right now. Check back soon for fresh catch!"}
+                : activeTab === "live"
+                ? "The harbor is quiet right now. Check back soon for fresh catch!"
+                : "No completed auctions yet. Check the live auctions tab!"}
             </p>
             {searchTerm && (
               <button

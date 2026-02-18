@@ -27,6 +27,9 @@ public class AuctionService {
     private final EventPublisher eventPublisher;
 
     public Auction createAuction(Auction auction) {
+        // Validate fish type and location against available data
+        validateAuctionData(auction);
+        
         auction.setActive(true);
         Auction saved = auctionRepo.save(auction);
         
@@ -41,6 +44,32 @@ public class AuctionService {
         
         log.info("Auction created: id={}, fish={}", saved.getId(), saved.getFishName());
         return saved;
+    }
+
+    /**
+     * Validate auction data against available fish types and locations
+     */
+    private void validateAuctionData(Auction auction) {
+        if (auction.getFishName() == null || auction.getFishName().isBlank()) {
+            throw new RuntimeException("Fish name is required");
+        }
+        if (auction.getLocation() == null || auction.getLocation().isBlank()) {
+            throw new RuntimeException("Location is required");
+        }
+
+        // Check if fish type exists in system
+        List<String> availableFish = getAvailableFishTypes();
+        if (!availableFish.isEmpty() && !availableFish.contains(auction.getFishName())) {
+            log.warn("User attempted to create auction with unverified fish type: {}", auction.getFishName());
+            // Don't throw error - allow new fish types but log for monitoring
+        }
+
+        // Check if location exists in system
+        List<String> availableLocations = getAvailableLocations();
+        if (!availableLocations.isEmpty() && !availableLocations.contains(auction.getLocation())) {
+            log.warn("User attempted to create auction with unverified location: {}", auction.getLocation());
+            // Don't throw error - allow new locations but log for monitoring
+        }
     }
 
     @Transactional
@@ -160,8 +189,40 @@ public class AuctionService {
         return auctionRepo.findAll();
     }
 
+    /**
+     * Get all auctions marked as active (ordered by newest first)
+     * Note: May include expired auctions if not auto-closed
+     */
     public List<Auction> getActiveAuctions() {
         return auctionRepo.findByActiveTrue();
+    }
+
+    /**
+     * Get truly live auctions (active AND not expired) ordered by newest first
+     */
+    public List<Auction> getLiveAuctions() {
+        return auctionRepo.findLiveAuctions(Instant.now());
+    }
+
+    /**
+     * Get closed auctions (inactive OR expired) ordered by most recent first
+     */
+    public List<Auction> getClosedAuctions() {
+        return auctionRepo.findClosedAuctions(Instant.now());
+    }
+
+    /**
+     * Get distinct fish types available in the system
+     */
+    public List<String> getAvailableFishTypes() {
+        return auctionRepo.findDistinctFishTypes();
+    }
+
+    /**
+     * Get distinct locations available in the system
+     */
+    public List<String> getAvailableLocations() {
+        return auctionRepo.findDistinctLocations();
     }
 
     public void deleteAuction(Long id) {

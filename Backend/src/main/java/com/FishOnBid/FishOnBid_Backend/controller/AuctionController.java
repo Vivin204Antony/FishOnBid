@@ -3,6 +3,7 @@ package com.FishOnBid.FishOnBid_Backend.controller;
 import java.util.List;
 import java.util.Map;
 
+import com.FishOnBid.FishOnBid_Backend.dto.AuctionMetadataDTO;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,10 +33,22 @@ public class AuctionController {
         return auctionService.getAllAuctions();
     }
 
-    // 🔹 Get active auctions
+    // 🔹 Get active auctions (ordered by newest first)
     @GetMapping("/active")
     public List<Auction> getActiveAuctions() {
         return auctionService.getActiveAuctions();
+    }
+
+    // 🔹 Get truly live auctions (active AND not expired, ordered by newest first)
+    @GetMapping("/live")
+    public List<Auction> getLiveAuctions() {
+        return auctionService.getLiveAuctions();
+    }
+
+    // 🔹 Get closed auctions (inactive OR expired)
+    @GetMapping("/closed")
+    public List<Auction> getClosedAuctions() {
+        return auctionService.getClosedAuctions();
     }
 
     // 🔹 Get auction by ID
@@ -86,5 +99,13 @@ public class AuctionController {
     @GetMapping("/{id}/summary")
     public Map<String, Object> getAuctionSummary(@PathVariable Long id) {
         return auctionService.getAuctionSummary(id);
+    }
+
+    // 🔹 Get available fish types and locations (for dropdowns)
+    @GetMapping("/metadata")
+    public AuctionMetadataDTO getAuctionMetadata() {
+        List<String> fishTypes = auctionService.getAvailableFishTypes();
+        List<String> locations = auctionService.getAvailableLocations();
+        return AuctionMetadataDTO.of(fishTypes, locations);
     }
 }

@@ -1,16 +1,17 @@
 package com.FishOnBid.FishOnBid_Backend.repository;
 
-import com.FishOnBid.FishOnBid_Backend.entity.Auction;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
+import com.FishOnBid.FishOnBid_Backend.entity.Auction;
+
+import jakarta.persistence.LockModeType;
 
 
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
@@ -58,9 +59,36 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     );
 
     /**
-     * Find all active auctions
+     * Find all active auctions ordered by creation time (newest first)
      */
+    @Query("""
+        SELECT a FROM Auction a
+        WHERE a.active = true
+        ORDER BY a.startTime DESC
+    """)
     List<Auction> findByActiveTrue();
+
+    /**
+     * Find truly live auctions (active AND not expired) ordered by newest first
+     */
+    @Query("""
+        SELECT a FROM Auction a
+        WHERE a.active = true
+        AND a.endTime > :currentTime
+        ORDER BY a.startTime DESC
+    """)
+    List<Auction> findLiveAuctions(@Param("currentTime") Instant currentTime);
+
+    /**
+     * Find closed auctions (inactive OR expired) ordered by end time descending
+     */
+    @Query("""
+        SELECT a FROM Auction a
+        WHERE a.active = false
+        OR a.endTime <= :currentTime
+        ORDER BY a.endTime DESC
+    """)
+    List<Auction> findClosedAuctions(@Param("currentTime") Instant currentTime);
 
     /**
      * Find auctions by fish name (case-insensitive)
@@ -89,6 +117,35 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     """)
     Double getAverageClosingPrice(
             @Param("fishName") String fishName,
+            @Param("fromDate") Instant fromDate
+    );
+
+    /**
+     * Get distinct fish types that have data (for dropdown population)
+     */
+    @Query("SELECT DISTINCT a.fishName FROM Auction a WHERE a.fishName IS NOT NULL ORDER BY a.fishName")
+    List<String> findDistinctFishTypes();
+
+    /**
+     * Get distinct locations that have data (for dropdown population)
+     */
+    @Query("SELECT DISTINCT a.location FROM Auction a WHERE a.location IS NOT NULL ORDER BY a.location")
+    List<String> findDistinctLocations();
+
+    /**
+     * Find generic Fish government data as fallback when specific fish type has no govt records
+     */
+    @Query("""
+        SELECT a FROM Auction a
+        WHERE a.fishName = 'Fish'
+        AND a.location = :location
+        AND a.endTime >= :fromDate
+        AND a.active = false
+        AND a.dataSource = 'GOVT_INSTITUTIONAL_API'
+        ORDER BY a.endTime DESC
+    """)
+    List<Auction> findGenericFishGovtData(
+            @Param("location") String location,
             @Param("fromDate") Instant fromDate
     );
 }

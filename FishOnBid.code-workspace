@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"name": "Backend",
+			"path": "Backend"
+		},
+		{
+			"name": "Frontend",
+			"path": "Frontend"
+		}
+	],
+	"settings": {
+		"java.compile.nullAnalysis.mode": "automatic",
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"java.import.gradle.enabled": false,
+		"java.import.maven.enabled": true,
+		"files.exclude": {
+			"dev-dist": true,
+			"dist": true
+		}
+	}
+}

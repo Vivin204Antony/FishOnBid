@@ -25,16 +25,17 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [activeRes, allRes] = await Promise.all([
-          api.get('/auctions/active'),
+        const [liveRes, allRes] = await Promise.all([
+          api.get('/auctions/live'),
           api.get('/auctions')
         ]);
 
-        setMyAuctions(activeRes.data.slice(0, 4));
+        // Get first 4 live auctions (already ordered by newest first from backend)
+        setMyAuctions(liveRes.data.slice(0, 4));
 
         setStats({
-          activeAuctions: activeRes.data.length,
-          totalBids: activeRes.data.reduce((acc, curr) => acc + (curr.currentPrice > curr.startPrice ? 5 : 0), 0) || activeRes.data.length * 2,
+          activeAuctions: liveRes.data.length,
+          totalBids: liveRes.data.reduce((acc, curr) => acc + (curr.currentPrice > curr.startPrice ? 5 : 0), 0) || liveRes.data.length * 2,
           marketTrend: 'Upward',
           historicalPoints: allRes.data.length
         });

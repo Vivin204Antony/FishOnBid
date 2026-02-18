@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import aiService from '../api/aiService';
@@ -26,6 +26,13 @@ export default function CreateAuction() {
         sellerNotes: ''
     });
 
+    // Dynamic metadata from backend
+    const [metadata, setMetadata] = useState({
+        fishTypes: [],
+        locations: [],
+        loading: true
+    });
+
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
 
@@ -36,6 +43,29 @@ export default function CreateAuction() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+
+    // Fetch available fish types and locations on mount
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            try {
+                const response = await api.get('/auctions/metadata');
+                setMetadata({
+                    fishTypes: response.data.fishTypes || [],
+                    locations: response.data.locations || [],
+                    loading: false
+                });
+            } catch (err) {
+                console.error('Failed to fetch auction metadata:', err);
+                // Fallback to default values if API fails
+                setMetadata({
+                    fishTypes: ['Tuna', 'Salmon', 'Mackerel', 'Pomfret', 'Sardine', 'Prawns'],
+                    locations: ['Chennai Harbor', 'Vizag Harbor', 'Kochi Harbor', 'Mumbai Harbor'],
+                    loading: false
+                });
+            }
+        };
+        fetchMetadata();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -236,20 +266,20 @@ export default function CreateAuction() {
                                         onChange={handleChange}
                                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                                         required
+                                        disabled={metadata.loading}
                                     >
-                                        <option value="">Select fish type</option>
-                                        <option value="Tuna">Tuna</option>
-                                        <option value="Salmon">Salmon</option>
-                                        <option value="Mackerel">Mackerel</option>
-                                        <option value="Pomfret">Pomfret</option>
-                                        <option value="Sardine">Sardine</option>
-                                        <option value="Kingfish">Kingfish</option>
-                                        <option value="Seer Fish">Seer Fish</option>
-                                        <option value="Prawns">Prawns</option>
-                                        <option value="Lobster">Lobster</option>
-                                        <option value="Crab">Crab</option>
-                                        <option value="Other">Other</option>
+                                        <option value="">
+                                            {metadata.loading ? 'Loading fish types...' : 'Select fish type'}
+                                        </option>
+                                        {metadata.fishTypes.map(fish => (
+                                            <option key={fish} value={fish}>{fish}</option>
+                                        ))}
                                     </select>
+                                    {metadata.fishTypes.length > 0 && (
+                                        <p className="text-xs text-green-600 mt-1">
+                                            ✓ {metadata.fishTypes.length} verified fish types available
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Location & Quantity */}
@@ -264,15 +294,20 @@ export default function CreateAuction() {
                                             onChange={handleChange}
                                             className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                                             required
+                                            disabled={metadata.loading}
                                         >
-                                            <option value="">Select location</option>
-                                            <option value="Chennai Harbor">Chennai Harbor</option>
-                                            <option value="Vizag Harbor">Vizag Harbor</option>
-                                            <option value="Kochi Harbor">Kochi Harbor</option>
-                                            <option value="Mumbai Harbor">Mumbai Harbor</option>
-                                            <option value="Goa Harbor">Goa Harbor</option>
-                                            <option value="Mangalore Harbor">Mangalore Harbor</option>
+                                            <option value="">
+                                                {metadata.loading ? 'Loading locations...' : 'Select location'}
+                                            </option>
+                                            {metadata.locations.map(loc => (
+                                                <option key={loc} value={loc}>{loc}</option>
+                                            ))}
                                         </select>
+                                        {metadata.locations.length > 0 && (
+                                            <p className="text-xs text-green-600 mt-1">
+                                                ✓ {metadata.locations.length} harbors with market data
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">

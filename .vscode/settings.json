@@ -1,3 +1,25 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.import.gradle.enabled": false,
+    "java.import.maven.enabled": true,
+    "java.import.exclusions": [
+        "**/pom.xml",
+        "!**/Backend/pom.xml"
+    ],
+    "files.exclude": {
+        "src/": true,
+        "Backend/target": true,
+        "Backend/.mvn": true,
+        "mvnw": true,
+        "mvnw.cmd": true,
+        "pom.xml": true,
+        "dev-dist": true,
+        "dist": true,
+        "node_modules": true
+    },
+    "java.project.sourcePaths": [
+        "Backend/src/main/java"
+    ],
+    "java.project.referencedLibraries": []
 }

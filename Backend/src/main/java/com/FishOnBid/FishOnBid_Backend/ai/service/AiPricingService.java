@@ -28,7 +28,7 @@ public class AiPricingService {
     // Configuration constants
     private static final double DEFAULT_BASE_PRICE = 500.0;
     private static final double CONFIDENCE_RANGE_PERCENT = 0.10;
-    private static final int DEFAULT_LOOKBACK_DAYS = 7;
+    private static final int DEFAULT_LOOKBACK_DAYS = 90; // Increased from 7 to 90 days for historical data
     private static final double EXTERNAL_DATA_WEIGHT = 0.30;
 
     /**
