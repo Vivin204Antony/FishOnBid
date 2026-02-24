@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Response DTO for Vision-based fish quality analysis.
- * Contains freshness score, confidence, and explanation.
+ * Contains freshness score, confidence, detected fish type, and explanation.
  */
 @Data
 @Builder
@@ -40,6 +40,11 @@ public class VisionAnalysisResponseDTO {
     private String qualityGrade;
 
     /**
+     * AI-detected fish type from the image
+     */
+    private String detectedFishType;
+
+    /**
      * Whether this analysis was from mock/stub (vs real AI)
      */
     private boolean isMocked;
@@ -54,14 +59,15 @@ public class VisionAnalysisResponseDTO {
      */
     public static VisionAnalysisResponseDTO createMocked(String fishType, int score) {
         String grade = score >= 90 ? "PREMIUM" : score >= 70 ? "GOOD" : score >= 50 ? "ACCEPTABLE" : "LOW";
-        
+
         return VisionAnalysisResponseDTO.builder()
                 .freshnessScore(score)
                 .confidence(0.85)
                 .qualityGrade(grade)
+                .detectedFishType(fishType)
                 .explanation(String.format(
-                    "Simulated analysis for %s. Freshness appears %s based on mock evaluation. " +
-                    "Enable ai.vision.enabled=true for GPT-4V analysis.",
+                    "Simulated analysis for %s. Freshness appears %s based on visual indicators. " +
+                    "Enable ai.vision.enabled=true with OPENAI_API_KEY for real GPT-4o analysis.",
                     fishType, grade.toLowerCase()))
                 .isMocked(true)
                 .processingTimeMs(50)

@@ -60,8 +60,15 @@ public class Auction {
     /**
      * Fish image URL for Vision AI analysis
      */
-    @Column(length = 1000)
+    @Column(length = 2000)
     private String imageUrl;
+
+    /**
+     * Fish image as Base64 for display on auction cards (captured via camera)
+     */
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String imageBase64;
 
     /**
      * Seller notes/description

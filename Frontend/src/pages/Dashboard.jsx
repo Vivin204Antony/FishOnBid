@@ -5,8 +5,10 @@ import { AuthContext } from '../context/AuthContext';
 import AuctionCard from '../components/AuctionCard';
 import {
   Anchor, TrendingUp, Gavel, Bot, AlertTriangle, Plus, ArrowRight,
-  Activity, BarChart3, Loader2
+  Activity, BarChart3, Loader2, ExternalLink
 } from 'lucide-react';
+
+const FMPIS_URL = 'https://fmpisnfdb.in/';
 
 /**
  * Professional Dashboard Component with Lucide Icons
@@ -54,20 +56,9 @@ export default function Dashboard() {
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Hello, {user?.name || 'Fisherman'}!</h1>
-              <p className="text-blue-100 text-lg">Welcome to your FishOnBid Command Center.</p>
-            </div>
-            <div className="flex gap-4">
-              <Link
-                to="/auctions/create"
-                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl 
-                           font-bold transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" /> Create Auction
-              </Link>
-            </div>
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Hello, {user?.name || 'Fisherman'}!</h1>
+            <p className="text-blue-100 text-lg">Welcome to your FishOnBid Command Center.</p>
           </div>
         </div>
       </div>
@@ -156,15 +147,33 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-6 text-white shadow-lg">
-              <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" /> Market Alert!
-              </h3>
-              <p className="text-white/90 text-sm mb-4">
-                Tuna prices are up by 15% in the Chennai Harbor region. List your stock now for maximum bids.
+              <a
+                href={FMPIS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 mb-2 w-fit hover:underline decoration-white/60"
+              >
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5" /> Market Alert
+                </h3>
+                <ExternalLink className="w-4 h-4 opacity-70" />
+              </a>
+              <p className="text-white/90 text-sm mb-1">
+                Check live fish auction prices across India on the official government portal.
               </p>
-              <button className="w-full bg-white/20 hover:bg-white/30 py-2 rounded-lg font-bold transition-colors flex items-center justify-center gap-2">
-                <BarChart3 className="w-4 h-4" /> View Market Report
-              </button>
+              <p className="text-white/70 text-xs mb-4">
+                📌 Fish Market Price Information System · fmpisnfdb.in
+              </p>
+              <a
+                href={FMPIS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-white/20 hover:bg-white/35 py-2 rounded-lg font-bold
+                           transition-colors flex items-center justify-center gap-2"
+              >
+                <BarChart3 className="w-4 h-4" /> View Live Market Prices
+                <ExternalLink className="w-3 h-3 opacity-70" />
+              </a>
             </div>
           </div>
         </div>

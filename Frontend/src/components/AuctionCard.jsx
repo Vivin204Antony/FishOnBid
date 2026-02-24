@@ -2,86 +2,102 @@ import { Link } from "react-router-dom";
 import { MapPin, Scale, Clock, ArrowRight, Zap } from 'lucide-react';
 
 /**
- * Enhanced Auction Card Component with Lucide Icons
- * Automatically shows CLOSED status when auction time expires
+ * Auction Card Component
+ * Shows the actual fish photo when imageBase64 is present (camera capture).
+ * Falls back to a stylised fish-emoji gradient placeholder.
+ * LIVE/CLOSED badge and freshness score overlaid on the image.
  */
 export default function AuctionCard({ auction }) {
+
   const formatDate = (dateStr) => {
     if (!dateStr) return 'TBD';
-    const date = new Date(dateStr);
-    return date.toLocaleString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+    return new Date(dateStr).toLocaleString('en-IN', {
+      day: 'numeric', month: 'short',
+      hour: 'numeric', minute: '2-digit', hour12: true
     });
   };
 
-  // Check if auction has expired based on endTime
-  const isAuctionActive = () => {
+  const isActive = (() => {
     if (!auction.active) return false;
     if (!auction.endTime) return auction.active;
+    return new Date() < new Date(auction.endTime);
+  })();
 
-    const now = new Date();
-    const endTime = new Date(auction.endTime);
-    return now < endTime;
-  };
-
-  const isActive = isAuctionActive();
+  const hasImage = !!auction.imageBase64;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden 
-                    hover:shadow-md transition-all duration-300 flex flex-col group">
-      <div className="h-3 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden
+                    hover:shadow-lg transition-all duration-300 flex flex-col group">
 
-      <div className="p-5 flex-1">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 
-                           transition-colors line-clamp-1">
-              {auction.fishName}
-            </h3>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
-                <MapPin className="w-3 h-3" /> {auction.location || 'Unknown Harbor'}
-              </span>
-              <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
-                <Scale className="w-3 h-3" /> {auction.quantityKg || '??'} kg
-              </span>
-            </div>
+      {/* ── Fish Image / Placeholder Banner ── */}
+      <div className="relative h-40 overflow-hidden flex-shrink-0">
+        {hasImage ? (
+          <img
+            src={`data:image/jpeg;base64,${auction.imageBase64}`}
+            alt={auction.fishName}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600
+                          flex items-center justify-center">
+            <span className="text-6xl select-none drop-shadow-lg">🐟</span>
           </div>
-          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${isActive
-              ? "bg-green-100 text-green-700 border border-green-200"
-              : "bg-red-100 text-red-700 border border-red-200"
-            }`}>
-            {isActive && <Zap className="w-3 h-3" />}
-            {isActive ? "LIVE" : "CLOSED"}
+        )}
+
+        {/* LIVE / CLOSED badge — top right */}
+        <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-[10px]
+                          font-bold uppercase tracking-wider flex items-center gap-1
+                          ${isActive
+            ? 'bg-green-500 text-white shadow-md shadow-green-500/40'
+            : 'bg-red-500 text-white'}`}>
+          {isActive && <Zap className="w-3 h-3" />}
+          {isActive ? 'LIVE' : 'CLOSED'}
+        </span>
+
+        {/* Freshness badge — top left (only when vision-scored) */}
+        {!!auction.freshnessScore && (
+          <span className="absolute top-3 left-3 px-2 py-1 rounded-full text-[10px]
+                           font-bold bg-black/50 backdrop-blur-sm text-white">
+            ✨ {auction.freshnessScore}% Fresh
+          </span>
+        )}
+      </div>
+
+      {/* ── Card Body ── */}
+      <div className="p-5 flex-1">
+        <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600
+                       transition-colors line-clamp-1 mb-1">
+          {auction.fishName}
+        </h3>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
+            <MapPin className="w-3 h-3" /> {auction.location || 'Unknown Harbor'}
+          </span>
+          <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
+            <Scale className="w-3 h-3" /> {auction.quantityKg || '??'} kg
           </span>
         </div>
 
-        <div className="bg-gray-50 rounded-xl p-4 mb-4">
-          <div className="flex justify-between items-end">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Current Bid</p>
-              <p className="text-2xl font-black text-blue-700">
-                ₹{auction.currentPrice?.toLocaleString('en-IN') || '0'}
-                <span className="text-xs font-normal text-gray-400 ml-1">/kg</span>
-              </p>
-            </div>
-          </div>
+        <div className="bg-gray-50 rounded-xl p-4 mb-3">
+          <p className="text-xs text-gray-500 mb-1">Current Bid</p>
+          <p className="text-2xl font-black text-blue-700">
+            ₹{auction.currentPrice?.toLocaleString('en-IN') || '0'}
+            <span className="text-xs font-normal text-gray-400 ml-1">/kg</span>
+          </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-5">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
           <Clock className="w-3 h-3" />
           <span>Ends: {formatDate(auction.endTime)}</span>
         </div>
       </div>
 
+      {/* ── CTA ── */}
       <div className="px-5 pb-5">
         <Link
           to={`/auction/${auction.id}`}
-          className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 text-white rounded-xl font-bold 
+          className="flex items-center justify-center gap-2 w-full py-3
+                     bg-blue-600 text-white rounded-xl font-bold
                      hover:bg-blue-700 transition-all shadow-sm hover:shadow-blue-200"
         >
           Place Your Bid <ArrowRight className="w-4 h-4" />

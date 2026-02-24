@@ -4,6 +4,9 @@ import com.FishOnBid.FishOnBid_Backend.ai.dto.AiPriceRequestDTO;
 import com.FishOnBid.FishOnBid_Backend.ai.dto.AiPriceResponseDTO;
 import com.FishOnBid.FishOnBid_Backend.ai.service.AiOrchestratorService;
 import com.FishOnBid.FishOnBid_Backend.ai.service.AiPricingService;
+import com.FishOnBid.FishOnBid_Backend.ai.vision.VisionAnalysisRequestDTO;
+import com.FishOnBid.FishOnBid_Backend.ai.vision.VisionAnalysisResponseDTO;
+import com.FishOnBid.FishOnBid_Backend.ai.vision.VisionAnalysisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * REST Controller for AI-powered auction pricing.
- * Provides endpoints for price suggestions using RAG.
+ * REST Controller for AI-powered auction pricing and vision analysis.
+ * Provides endpoints for price suggestions using RAG and fish image analysis.
  */
 @RestController
 @RequestMapping("/api/ai")
@@ -24,29 +27,20 @@ public class AiController {
 
     private final AiPricingService pricingService;
     private final AiOrchestratorService orchestratorService;
+    private final VisionAnalysisService visionAnalysisService;
 
     /**
      * Get AI-assisted price suggestion for an auction.
      * Uses RAG (Retrieval-Augmented Generation) with historical auction data.
      * 
      * POST /api/ai/price-suggestion
-     * 
-     * Request Body:
-     * {
-     *   "fishName": "Tuna",
-     *   "quantityKg": 50.0,
-     *   "location": "Chennai Harbor",
-     *   "freshnessScore": 85  // optional
-     * }
      */
     @PostMapping("/price-suggestion")
     public ResponseEntity<AiPriceResponseDTO> suggestPrice(
             @RequestBody AiPriceRequestDTO request
     ) {
         log.info("Price suggestion requested for: {}", request.fishName());
-        
         AiPriceResponseDTO response = pricingService.generatePriceSuggestion(request);
-        
         return ResponseEntity.ok(response);
     }
 
@@ -87,6 +81,39 @@ public class AiController {
     }
 
     /**
+     * Analyze a fish image using AI Vision (GPT-4o).
+     * Returns detected fish type, freshness score, quality grade, and explanation.
+     * 
+     * POST /api/ai/vision/analyze
+     * 
+     * Request Body:
+     * {
+     *   "imageBase64": "base64EncodedImageData",
+     *   "fishType": "optional hint for context"
+     * }
+     */
+    @PostMapping("/vision/analyze")
+    public ResponseEntity<VisionAnalysisResponseDTO> analyzeImage(
+            @RequestBody VisionAnalysisRequestDTO request
+    ) {
+        log.info("Vision analysis requested: hasImage={}, fishType={}",
+                request.hasImage(), request.getFishType());
+
+        VisionAnalysisResponseDTO result = visionAnalysisService.analyze(request);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Get vision service status.
+     * 
+     * GET /api/ai/vision/status
+     */
+    @GetMapping("/vision/status")
+    public ResponseEntity<Map<String, Object>> visionStatus() {
+        return ResponseEntity.ok(visionAnalysisService.getStatus());
+    }
+
+    /**
      * Health check endpoint for AI services.
      * 
      * GET /api/ai/health
@@ -94,13 +121,15 @@ public class AiController {
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> healthCheck() {
         boolean isHealthy = orchestratorService.isHealthy();
+        Map<String, Object> visionStatus = visionAnalysisService.getStatus();
         
         return ResponseEntity.ok(Map.of(
                 "status", isHealthy ? "UP" : "DOWN",
-                "service", "AI Pricing Service",
+                "service", "AI Pricing + Vision Service",
                 "ragEnabled", true,
-                "visionEnabled", true,
-                "genAiEnabled", false  // Will be true in Phase 3
+                "visionEnabled", visionStatus.get("enabled"),
+                "visionMode", visionStatus.get("mode"),
+                "genAiEnabled", false
         ));
     }
 }
