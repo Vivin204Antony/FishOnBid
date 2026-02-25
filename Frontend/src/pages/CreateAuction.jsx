@@ -166,6 +166,24 @@ export default function CreateAuction() {
         }
     };
 
+    // ──────────────────────────────────────────────
+    // IMAGE: Compress to max 640px / quality 0.65
+    // Keeps base64 payload under ~100KB for reliable DB storage
+    // ──────────────────────────────────────────────
+    const compressImage = (sourceCanvas) => {
+        const MAX_WIDTH = 640;
+        let { width, height } = sourceCanvas;
+        if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+        }
+        const comp = document.createElement('canvas');
+        comp.width = width;
+        comp.height = height;
+        comp.getContext('2d').drawImage(sourceCanvas, 0, 0, width, height);
+        return comp.toDataURL('image/jpeg', 0.65);
+    };
+
     const capturePhoto = useCallback(() => {
         if (!videoRef.current || !canvasRef.current) return;
 
@@ -173,12 +191,11 @@ export default function CreateAuction() {
         const canvas = canvasRef.current;
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
 
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        const base64Data = dataUrl.split(',')[1]; // Strip data:image/jpeg;base64, prefix
+        // Compress before storing
+        const dataUrl = compressImage(canvas);
+        const base64Data = dataUrl.split(',')[1];
 
         setImageBase64(base64Data);
         setImagePreview(dataUrl);
@@ -197,15 +214,23 @@ export default function CreateAuction() {
     };
 
     // ──────────────────────────────────────────────
-    // IMAGE: Gallery upload fallback
+    // IMAGE: Gallery upload fallback (also compressed)
     // ──────────────────────────────────────────────
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const dataUrl = reader.result;
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        img.onload = () => {
+            // Draw onto canvas then compress
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            URL.revokeObjectURL(objectUrl);
+
+            const dataUrl = compressImage(canvas);
             const base64Data = dataUrl.split(',')[1];
 
             setImageBase64(base64Data);
@@ -216,7 +241,7 @@ export default function CreateAuction() {
             // Auto-trigger vision analysis
             runVisionAnalysis(base64Data);
         };
-        reader.readAsDataURL(file);
+        img.src = objectUrl;
     };
 
     const clearImage = () => {
