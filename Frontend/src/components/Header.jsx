@@ -1,5 +1,5 @@
 import { useContext, useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import {
   Fish, LayoutDashboard, LogOut, LogIn, UserCircle2,
@@ -14,6 +14,7 @@ import {
 export default function Header() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -86,8 +87,10 @@ export default function Header() {
                   <Link
                     to="/"
                     onClick={close}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700
-                               hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                    className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                      }`}
                   >
                     <Home className="w-4 h-4" /> Home
                   </Link>
@@ -98,8 +101,10 @@ export default function Header() {
                     <Link
                       to="/dashboard"
                       onClick={close}
-                      className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700
-                                 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/dashboard'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                        }`}
                     >
                       <LayoutDashboard className="w-4 h-4" /> Dashboard
                     </Link>
@@ -109,8 +114,10 @@ export default function Header() {
                   <Link
                     to="/auctions"
                     onClick={close}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700
-                               hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                    className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/auctions'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                      }`}
                   >
                     <Gavel className="w-4 h-4" /> Auctions
                   </Link>
@@ -131,16 +138,20 @@ export default function Header() {
                       <Link
                         to="/login"
                         onClick={close}
-                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700
-                                   hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/login'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                          }`}
                       >
                         <LogIn className="w-4 h-4" /> Login
                       </Link>
                       <Link
                         to="/signup"
                         onClick={close}
-                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700
-                                   hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/signup'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                          }`}
                       >
                         <UserPlus className="w-4 h-4" /> Sign Up
                       </Link>
