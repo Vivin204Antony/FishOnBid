@@ -65,7 +65,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-900 text-white py-14 px-6 relative">
+      <div className="bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-900 text-white py-14 px-6 relative overflow-hidden">
         {/* Decorative bubbles */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />

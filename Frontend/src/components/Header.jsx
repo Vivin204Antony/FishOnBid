@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import {
   Fish, LayoutDashboard, LogOut, LogIn, UserCircle2,
-  Gavel, ChevronDown, UserPlus
+  Gavel, ChevronDown, UserPlus, Home
 } from 'lucide-react';
 
 /**
@@ -82,6 +82,17 @@ export default function Header() {
                 )}
 
                 <div className="py-1">
+                  {/* Home — always visible */}
+                  <Link
+                    to="/"
+                    onClick={close}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700
+                               hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  >
+                    <Home className="w-4 h-4" /> Home
+                  </Link>
+
+                  <div className="my-1 mx-3 h-px bg-gray-100" />
                   {/* Dashboard — only when logged in */}
                   {user && (
                     <Link

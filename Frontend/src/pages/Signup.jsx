@@ -41,7 +41,7 @@ export default function Signup() {
         password: form.password
       });
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 2000);
+      setTimeout(() => navigate("/login"), 1000);
     } catch (err) {
       setError(err.response?.data || "Registration failed");
     } finally {
