@@ -173,7 +173,8 @@ export default function AuctionDetail() {
           <Fish className="w-16 h-16 mx-auto text-gray-300 mb-4" />
           <h2 className="text-2xl font-bold text-gray-800">Auction Not Found</h2>
           <p className="text-gray-500 mt-2 mb-6">This auction may have been removed.</p>
-          <button onClick={() => navigate('/auctions')} className="bg-blue-600 text-white px-8 py-2 rounded-xl flex items-center gap-2 mx-auto">
+          <button onClick={() => navigate('/auctions')}
+            className="bg-blue-600 text-white px-8 py-2 rounded-xl flex items-center gap-2 mx-auto hover:bg-blue-700 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Marketplace
           </button>
         </div>
@@ -181,51 +182,92 @@ export default function AuctionDetail() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Connection Status */}
-        <div className={`mb-4 px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-2 ${wsConnected ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-          }`}>
-          {wsConnected ? (
-            <><Wifi className="w-4 h-4" /> Live Updates Active</>
-          ) : (
-            <><WifiOff className="w-4 h-4" /> Using Polling Fallback</>
-          )}
-        </div>
+  const hasImage = !!auction.imageBase64;
+  const isLive = auction.active && auction.endTime && new Date() < new Date(auction.endTime);
 
+  return (
+    <div className="min-h-screen bg-gray-50 pb-12">
+      {/* ── Top Bar ── */}
+      <div className="bg-white border-b border-gray-100 px-6 py-3">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <button
+            onClick={() => navigate('/auctions')}
+            className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-medium text-sm transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Auctions
+          </button>
+          <div className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-1
+            ${isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+            {isLive ? <TrendingUp className="w-3 h-3" /> : <Trophy className="w-3 h-3" />}
+            {isLive ? 'LIVE' : 'CLOSED'}
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5
+            ${wsConnected ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+            {wsConnected ? <><Wifi className="w-3.5 h-3.5" /> Live</> : <><WifiOff className="w-3.5 h-3.5" /> Polling</>}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           {/* Left Column: Info */}
           <div className="space-y-6">
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="h-64 bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center">
-                <Fish className="w-32 h-32 text-white/50" />
+              {/* Image banner — real photo or gradient */}
+              <div className="relative h-64 overflow-hidden">
+                {hasImage ? (
+                  <img
+                    src={`data:image/jpeg;base64,${auction.imageBase64}`}
+                    alt={auction.fishName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700
+                                  flex items-center justify-center">
+                    <Fish className="w-24 h-24 text-white/30" />
+                    <span className="text-8xl select-none drop-shadow-2xl absolute">🐟</span>
+                  </div>
+                )}
               </div>
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h1 className="text-4xl font-black text-gray-800">{auction.fishName}</h1>
-                  <span className={`px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-1 ${auction.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                    }`}>
-                    {auction.active ? <TrendingUp className="w-3 h-3" /> : <Trophy className="w-3 h-3" />}
-                    {auction.active ? "LIVE" : "CLOSED"}
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gray-50 p-4 rounded-2xl">
-                    <p className="text-xs text-gray-500 font-bold uppercase mb-1 flex items-center gap-1">
+              <div className="p-8">
+                <h1 className="text-4xl font-black text-gray-800 mb-6">{auction.fishName}</h1>
+
+                {/* Info grid */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                    <p className="text-xs text-blue-500 font-bold uppercase mb-1 flex items-center gap-1">
                       <MapPin className="w-3 h-3" /> Location
                     </p>
-                    <p className="text-lg font-bold text-gray-700">{auction.location || 'N/A'}</p>
+                    <p className="text-base font-bold text-blue-800">{auction.location || 'N/A'}</p>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-2xl">
-                    <p className="text-xs text-gray-500 font-bold uppercase mb-1 flex items-center gap-1">
+                  <div className="bg-teal-50 p-4 rounded-2xl border border-teal-100">
+                    <p className="text-xs text-teal-500 font-bold uppercase mb-1 flex items-center gap-1">
                       <Scale className="w-3 h-3" /> Quantity
                     </p>
-                    <p className="text-lg font-bold text-gray-700">{auction.quantityKg || '??'} kg</p>
+                    <p className="text-base font-bold text-teal-800">{auction.quantityKg ?? '??'} kg</p>
                   </div>
+                  {!!auction.freshnessScore && (
+                    <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
+                      <p className="text-xs text-green-500 font-bold uppercase mb-1">✨ Freshness Score</p>
+                      <p className="text-base font-bold text-green-800">{auction.freshnessScore}% Fresh</p>
+                    </div>
+                  )}
+                  {!!auction.aiSuggestedPrice && (
+                    <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                      <p className="text-xs text-indigo-500 font-bold uppercase mb-1">🤖 AI Suggested</p>
+                      <p className="text-base font-bold text-indigo-800">₹{auction.aiSuggestedPrice}/kg</p>
+                    </div>
+                  )}
                 </div>
+
+                {auction.sellerNotes && (
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <p className="text-xs text-gray-400 font-bold uppercase mb-1">Seller Notes</p>
+                    <p className="text-sm text-gray-700">{auction.sellerNotes}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

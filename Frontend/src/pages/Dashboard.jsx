@@ -51,19 +51,38 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good Morning';
+    if (h < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  })();
+
+  const todayStr = new Date().toLocaleDateString('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-12 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Hello, {user?.name || 'Fisherman'}!</h1>
-            <p className="text-blue-100 text-lg">Welcome to your FishOnBid Command Center.</p>
-          </div>
+      <div className="bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-900 text-white py-14 px-6 relative">
+        {/* Decorative bubbles */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+        <div className="max-w-6xl mx-auto relative">
+          <p className="text-blue-200 text-sm font-medium mb-1 tracking-wide">{todayStr}</p>
+          <h1 className="text-4xl font-black mb-2 flex items-center gap-3">
+            <span className="text-3xl">🐟</span>
+            {greeting}, {user?.name?.split(' ')[0] || 'Fisherman'}!
+          </h1>
+          <p className="text-blue-200 text-base">
+            <Anchor className="inline w-4 h-4 mr-1 opacity-70" />
+            Welcome to your FishOnBid Command Center.
+          </p>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 -mt-8">
+      <div className="max-w-6xl mx-auto px-6 mt-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           <StatCard
@@ -183,21 +202,22 @@ export default function Dashboard() {
 }
 
 function StatCard({ title, value, Icon, color }) {
-  const colors = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    indigo: 'bg-indigo-50 text-indigo-600',
-    orange: 'bg-orange-50 text-orange-600',
-  };
+  const scheme = {
+    blue: { icon: 'bg-blue-100 text-blue-600', border: 'border-l-blue-500', val: 'text-blue-700' },
+    green: { icon: 'bg-green-100 text-green-600', border: 'border-l-green-500', val: 'text-green-700' },
+    indigo: { icon: 'bg-indigo-100 text-indigo-600', border: 'border-l-indigo-500', val: 'text-indigo-700' },
+    orange: { icon: 'bg-orange-100 text-orange-600', border: 'border-l-orange-500', val: 'text-orange-700' },
+  }[color];
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
+    <div className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 border-l-4 ${scheme.border}
+                    flex items-center justify-between hover:shadow-md transition-shadow`}>
       <div>
-        <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">{title}</p>
-        <p className="text-3xl font-bold text-gray-800">{value}</p>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{title}</p>
+        <p className={`text-3xl font-black ${scheme.val}`}>{value}</p>
       </div>
-      <div className={`p-4 rounded-xl ${colors[color]}`}>
-        <Icon className="w-8 h-8" />
+      <div className={`p-3 rounded-xl ${scheme.icon}`}>
+        <Icon className="w-7 h-7" />
       </div>
     </div>
   );

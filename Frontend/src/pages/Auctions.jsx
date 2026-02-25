@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import api from "../api/axios";
 import AuctionCard from "../components/AuctionCard";
 import { Link } from "react-router-dom";
-import { Fish, Search, Filter, SlidersHorizontal, Rocket, Ship, Loader2, Activity, Archive } from 'lucide-react';
+import { AuthContext } from "../context/AuthContext";
+import { Fish, Search, Filter, SlidersHorizontal, Rocket, Ship, Loader2, Activity, Archive, LogIn } from 'lucide-react';
 
 /**
  * Enhanced Auctions Page with Live/Closed Tabs and Lucide Icons
  */
 export default function Auctions() {
+  const { user } = useContext(AuthContext);
   const [liveAuctions, setLiveAuctions] = useState([]);
   const [closedAuctions, setClosedAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export default function Auctions() {
   }, []);
 
   const currentAuctions = activeTab === "live" ? liveAuctions : closedAuctions;
-  
+
   const filteredAuctions = currentAuctions.filter(a =>
     a.fishName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     a.location?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -54,13 +56,23 @@ export default function Auctions() {
                 Real-time marketplace for fresh catch. Secure, transparent, and direct from harbor.
               </p>
             </div>
-            <Link
-              to="/auctions/create"
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl 
-                         font-bold transition-all shadow-lg flex items-center justify-center gap-2"
-            >
-              <Rocket className="w-5 h-5" /> Start New Auction
-            </Link>
+            {user ? (
+              <Link
+                to="/auctions/create"
+                className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl 
+                           font-bold transition-all shadow-lg flex items-center justify-center gap-2"
+              >
+                <Rocket className="w-5 h-5" /> Start New Auction
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-xl 
+                           font-bold transition-all flex items-center justify-center gap-2 border border-white/30"
+              >
+                <LogIn className="w-5 h-5" /> Login to Start Selling
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -70,33 +82,29 @@ export default function Auctions() {
         <div className="bg-white rounded-2xl shadow-xl mb-6 p-2 flex gap-2">
           <button
             onClick={() => setActiveTab("live")}
-            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-              activeTab === "live"
+            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${activeTab === "live"
                 ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg"
                 : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-            }`}
+              }`}
           >
             <Activity className="w-5 h-5" />
             Live Auctions
-            <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${
-              activeTab === "live" ? "bg-white/20" : "bg-gray-200"
-            }`}>
+            <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${activeTab === "live" ? "bg-white/20" : "bg-gray-200"
+              }`}>
               {liveAuctions.length}
             </span>
           </button>
           <button
             onClick={() => setActiveTab("closed")}
-            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-              activeTab === "closed"
+            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${activeTab === "closed"
                 ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg"
                 : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-            }`}
+              }`}
           >
             <Archive className="w-5 h-5" />
             Closed Auctions
-            <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${
-              activeTab === "closed" ? "bg-white/20" : "bg-gray-200"
-            }`}>
+            <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${activeTab === "closed" ? "bg-white/20" : "bg-gray-200"
+              }`}>
               {closedAuctions.length}
             </span>
           </button>
@@ -153,8 +161,8 @@ export default function Auctions() {
               {searchTerm
                 ? `We couldn't find any results for "${searchTerm}". Try a different search term.`
                 : activeTab === "live"
-                ? "The harbor is quiet right now. Check back soon for fresh catch!"
-                : "No completed auctions yet. Check the live auctions tab!"}
+                  ? "The harbor is quiet right now. Check back soon for fresh catch!"
+                  : "No completed auctions yet. Check the live auctions tab!"}
             </p>
             {searchTerm && (
               <button
