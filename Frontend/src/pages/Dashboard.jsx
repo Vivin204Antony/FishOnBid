@@ -4,23 +4,19 @@ import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import AuctionCard from '../components/AuctionCard';
 import {
-  Anchor, TrendingUp, Gavel, Bot, AlertTriangle, Plus, ArrowRight,
-  Activity, BarChart3, Loader2, ExternalLink
+  Anchor, TrendingUp, TrendingDown, Minus, Gavel, Bot,
+  AlertTriangle, Plus, ArrowRight, Activity, BarChart3,
+  Loader2, ExternalLink
 } from 'lucide-react';
 
 const FMPIS_URL = 'https://fmpisnfdb.in/';
 
 /**
- * Professional Dashboard Component with Lucide Icons
+ * Dashboard — Real stats derived from live API data
  */
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
-  const [stats, setStats] = useState({
-    activeAuctions: 0,
-    totalBids: 0,
-    marketTrend: 'Stable',
-    historicalPoints: 0
-  });
+  const [stats, setStats] = useState(null);
   const [myAuctions, setMyAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,17 +28,40 @@ export default function Dashboard() {
           api.get('/auctions')
         ]);
 
-        // Get first 4 live auctions (already ordered by newest first from backend)
-        setMyAuctions(liveRes.data.slice(0, 4));
+        const liveData = liveRes.data || [];
+        const allData = allRes.data || [];
+
+        // ── Real stats ──────────────────────────────────
+        // Estimate total bids: count auctions where currentPrice > startPrice (has been bid on)
+        const auctionsWithBids = allData.filter(a => a.currentPrice > a.startPrice).length;
+
+        // Market trend: compare avg currentPrice vs avg startPrice across live auctions
+        let marketTrend = 'Stable';
+        let TrendIcon = Minus;
+        let trendColor = 'orange';
+        if (liveData.length > 0) {
+          const avgStart = liveData.reduce((s, a) => s + (a.startPrice || 0), 0) / liveData.length;
+          const avgCurrent = liveData.reduce((s, a) => s + (a.currentPrice || 0), 0) / liveData.length;
+          const change = avgCurrent - avgStart;
+          if (change > 5) { marketTrend = 'Upward 📈'; TrendIcon = TrendingUp; trendColor = 'green'; }
+          else if (change < -5) { marketTrend = 'Downward 📉'; TrendIcon = TrendingDown; trendColor = 'red'; }
+          else { marketTrend = 'Stable 📊'; TrendIcon = Minus; trendColor = 'orange'; }
+        }
 
         setStats({
-          activeAuctions: liveRes.data.length,
-          totalBids: liveRes.data.reduce((acc, curr) => acc + (curr.currentPrice > curr.startPrice ? 5 : 0), 0) || liveRes.data.length * 2,
-          marketTrend: 'Upward',
-          historicalPoints: allRes.data.length
+          activeAuctions: liveData.length,
+          totalBids: auctionsWithBids,
+          historicalPoints: allData.length,
+          marketTrend,
+          TrendIcon,
+          trendColor,
         });
+
+        // Show first 4 live auctions in the "Recent" section
+        setMyAuctions(liveData.slice(0, 4));
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
+        setStats({ activeAuctions: 0, totalBids: 0, historicalPoints: 0, marketTrend: 'N/A', TrendIcon: Minus, trendColor: 'orange' });
       } finally {
         setLoading(false);
       }
@@ -66,7 +85,6 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-900 text-white py-14 px-6 relative overflow-hidden">
-        {/* Decorative bubbles */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
         <div className="max-w-6xl mx-auto relative">
@@ -85,30 +103,23 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-6 mt-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <StatCard
-            title="Live Auctions"
-            value={stats.activeAuctions}
-            Icon={Anchor}
-            color="blue"
-          />
-          <StatCard
-            title="Total Bids"
-            value={stats.totalBids}
-            Icon={Gavel}
-            color="green"
-          />
-          <StatCard
-            title="AI Training Points"
-            value={stats.historicalPoints}
-            Icon={Activity}
-            color="indigo"
-          />
-          <StatCard
-            title="Market Trend"
-            value={stats.marketTrend}
-            Icon={TrendingUp}
-            color="orange"
-          />
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded mb-2 w-2/3" />
+                <div className="h-8 bg-gray-200 rounded w-1/2" />
+              </div>
+            ))
+          ) : (
+            <>
+              <StatCard title="Live Auctions" value={stats.activeAuctions} Icon={Anchor} color="blue" />
+              <StatCard title="Auctions w/ Bids" value={stats.totalBids} Icon={Gavel} color="green"
+                tooltip="Auctions where at least one bid was placed" />
+              <StatCard title="AI Training Points" value={stats.historicalPoints} Icon={Activity} color="indigo"
+                tooltip="Historical data points available for AI pricing" />
+              <StatCard title="Market Trend" value={stats.marketTrend} Icon={stats.TrendIcon || Minus} color={stats.trendColor} />
+            </>
+          )}
         </div>
 
         {/* Action Sections */}
@@ -137,10 +148,8 @@ export default function Dashboard() {
                 <Anchor className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                 <h3 className="text-xl font-bold text-gray-700">No active auctions found</h3>
                 <p className="text-gray-500 mt-2 mb-6">Be the first to list your catch today!</p>
-                <Link
-                  to="/auctions/create"
-                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold"
-                >
+                <Link to="/auctions/create"
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold">
                   <Plus className="w-4 h-4" /> Start an Auction
                 </Link>
               </div>
@@ -154,24 +163,17 @@ export default function Dashboard() {
                 <Bot className="w-5 h-5 text-indigo-600" /> AI Assistant
               </h3>
               <p className="text-gray-600 text-sm mb-4">
-                Our AI Pricing tool is ready to help you maximize your profits based on historical market data.
+                Snap a photo of your catch — AI detects fish type, freshness & suggests the best market price.
               </p>
-              <Link
-                to="/auctions/create"
-                className="block w-full text-center py-3 bg-blue-50 text-blue-700 
-                         rounded-xl font-bold hover:bg-blue-100 transition-colors"
-              >
-                Try AI Pricing
+              <Link to="/auctions/create"
+                className="block w-full text-center py-3 bg-blue-50 text-blue-700 rounded-xl font-bold hover:bg-blue-100 transition-colors">
+                Try AI Pricing →
               </Link>
             </div>
 
             <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-6 text-white shadow-lg">
-              <a
-                href={FMPIS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 mb-2 w-fit hover:underline decoration-white/60"
-              >
+              <a href={FMPIS_URL} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 mb-2 w-fit hover:underline decoration-white/60">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" /> Market Alert
                 </h3>
@@ -183,13 +185,8 @@ export default function Dashboard() {
               <p className="text-white/70 text-xs mb-4">
                 📌 Fish Market Price Information System · fmpisnfdb.in
               </p>
-              <a
-                href={FMPIS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-white/20 hover:bg-white/35 py-2 rounded-lg font-bold
-                           transition-colors flex items-center justify-center gap-2"
-              >
+              <a href={FMPIS_URL} target="_blank" rel="noopener noreferrer"
+                className="w-full bg-white/20 hover:bg-white/35 py-2 rounded-lg font-bold transition-colors flex items-center justify-center gap-2">
                 <BarChart3 className="w-4 h-4" /> View Live Market Prices
                 <ExternalLink className="w-3 h-3 opacity-70" />
               </a>
@@ -201,20 +198,22 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, Icon, color }) {
+function StatCard({ title, value, Icon, color, tooltip }) {
   const scheme = {
     blue: { icon: 'bg-blue-100 text-blue-600', border: 'border-l-blue-500', val: 'text-blue-700' },
     green: { icon: 'bg-green-100 text-green-600', border: 'border-l-green-500', val: 'text-green-700' },
     indigo: { icon: 'bg-indigo-100 text-indigo-600', border: 'border-l-indigo-500', val: 'text-indigo-700' },
     orange: { icon: 'bg-orange-100 text-orange-600', border: 'border-l-orange-500', val: 'text-orange-700' },
-  }[color];
+    red: { icon: 'bg-red-100 text-red-600', border: 'border-l-red-500', val: 'text-red-700' },
+  }[color] || { icon: 'bg-gray-100 text-gray-600', border: 'border-l-gray-400', val: 'text-gray-700' };
 
   return (
-    <div className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 border-l-4 ${scheme.border}
-                    flex items-center justify-between hover:shadow-md transition-shadow`}>
+    <div title={tooltip || ''}
+      className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 border-l-4 ${scheme.border}
+                  flex items-center justify-between hover:shadow-md transition-shadow`}>
       <div>
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{title}</p>
-        <p className={`text-3xl font-black ${scheme.val}`}>{value}</p>
+        <p className={`text-2xl font-black ${scheme.val} leading-tight`}>{value}</p>
       </div>
       <div className={`p-3 rounded-xl ${scheme.icon}`}>
         <Icon className="w-7 h-7" />
