@@ -2,14 +2,15 @@ import { useContext, useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import {
-  Fish, LayoutDashboard, LogOut, LogIn, UserCircle2,
-  Gavel, ChevronDown, UserPlus, Home
+  LayoutDashboard, LogOut, LogIn, UserCircle2,
+  Gavel, ChevronDown, UserPlus, Home, Shield, Trophy
 } from 'lucide-react';
 
 /**
- * Header with a person-icon dropdown menu.
- * Dropdown contains: Dashboard (if logged in), Auctions, Login/Logout.
- * No inline nav links — everything lives in the dropdown.
+ * Header with:
+ * - Logo (left)
+ * - Admin button (only for ADMIN users) — sits OUTSIDE the dropdown, right side
+ * - Person icon dropdown (right-most)
  */
 export default function Header() {
   const { user, logout } = useContext(AuthContext);
@@ -37,6 +38,8 @@ export default function Header() {
 
   const close = () => setOpen(false);
 
+  const isAdmin = user?.role === 'ADMIN';
+
   return (
     <header className="bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,120 +51,141 @@ export default function Header() {
             <span className="text-xl font-bold tracking-tight">FishOnBid</span>
           </Link>
 
-          {/* ── User Dropdown ── */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setOpen((v) => !v)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl
-                         hover:bg-white/10 transition-colors"
-              aria-label="User menu"
-            >
-              <UserCircle2 className="w-7 h-7 text-white" />
-              {user && (
-                <span className="hidden sm:inline text-sm font-semibold max-w-[120px] truncate">
-                  {user.name}
-                </span>
-              )}
-              <ChevronDown
-                className={`w-4 h-4 text-white/70 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-              />
-            </button>
+          {/* ── Right side controls ── */}
+          <div className="flex items-center gap-2">
 
-            {/* ── Dropdown Panel ── */}
-            {open && (
-              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl
-                              border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2
-                              duration-150">
+            {/* ── Admin Button — separate, always visible when ADMIN ── */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/10 transition-colors"
+              >
+                <Shield className="w-6 h-6 text-white" />
+                <span className="hidden sm:inline text-sm font-semibold text-white">Admin</span>
+              </Link>
+            )}
 
-                {/* User info section (logged in) */}
+            {/* ── User Dropdown ── */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setOpen((v) => !v)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl
+                           hover:bg-white/10 transition-colors"
+                aria-label="User menu"
+              >
+                <UserCircle2 className="w-7 h-7 text-white" />
                 {user && (
-                  <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-br from-slate-50 to-blue-50">
-                    <p className="text-xs text-gray-400 font-medium">Signed in as</p>
-                    <p className="text-sm font-bold text-gray-800 truncate">{user.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                  </div>
+                  <span className="hidden sm:inline text-sm font-semibold max-w-[120px] truncate">
+                    {user.name}
+                  </span>
                 )}
+                <ChevronDown
+                  className={`w-4 h-4 text-white/70 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                />
+              </button>
 
-                <div className="py-1">
-                  {/* Home — always visible */}
-                  <Link
-                    to="/"
-                    onClick={close}
-                    className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/'
+              {/* ── Dropdown Panel ── */}
+              {open && (
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl
+                                border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2
+                                duration-150">
+
+
+
+                  <div className="py-1">
+                    {/* Home — always visible */}
+                    <Link
+                      to="/"
+                      onClick={close}
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/'
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                      }`}
-                  >
-                    <Home className="w-4 h-4" /> Home
-                  </Link>
-
-                  <div className="my-1 mx-3 h-px bg-gray-100" />
-                  {/* Dashboard — only when logged in */}
-                  {user && (
-                    <Link
-                      to="/dashboard"
-                      onClick={close}
-                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/dashboard'
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                         }`}
                     >
-                      <LayoutDashboard className="w-4 h-4" /> Dashboard
+                      <Home className="w-4 h-4" /> Home
                     </Link>
-                  )}
 
-                  {/* Auctions — always visible */}
-                  <Link
-                    to="/auctions"
-                    onClick={close}
-                    className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/auctions'
+                    <div className="my-1 mx-3 h-px bg-gray-100" />
+
+                    {/* Dashboard — only when logged in */}
+                    {user && (
+                      <Link
+                        to="/dashboard"
+                        onClick={close}
+                        className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/dashboard'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                          }`}
+                      >
+                        <LayoutDashboard className="w-4 h-4" /> Dashboard
+                      </Link>
+                    )}
+
+                    {/* Auctions — always visible */}
+                    <Link
+                      to="/auctions"
+                      onClick={close}
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/auctions'
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                      }`}
-                  >
-                    <Gavel className="w-4 h-4" /> Auctions
-                  </Link>
-
-                  <div className="my-1 mx-3 h-px bg-gray-100" />
-
-                  {/* Login / Logout */}
-                  {user ? (
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm
-                                 text-red-600 hover:bg-red-50 transition-colors"
+                        }`}
                     >
-                      <LogOut className="w-4 h-4" /> Logout
-                    </button>
-                  ) : (
-                    <>
-                      <Link
-                        to="/login"
-                        onClick={close}
-                        className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/login'
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                          }`}
-                      >
-                        <LogIn className="w-4 h-4" /> Login
-                      </Link>
-                      <Link
-                        to="/signup"
-                        onClick={close}
-                        className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/signup'
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                          }`}
-                      >
-                        <UserPlus className="w-4 h-4" /> Sign Up
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+                      <Gavel className="w-4 h-4" /> Auctions
+                    </Link>
 
+                    {/* Results — completed auction results */}
+                    <Link
+                      to="/results"
+                      onClick={close}
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/results'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                        }`}
+                    >
+                      <Trophy className="w-4 h-4" /> Results
+                    </Link>
+
+                    <div className="my-1 mx-3 h-px bg-gray-100" />
+
+                    {/* Login / Logout */}
+                    {user ? (
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm
+                                   text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" /> Logout
+                      </button>
+                    ) : (
+                      <>
+                        <Link
+                          to="/login"
+                          onClick={close}
+                          className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/login'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                            }`}
+                        >
+                          <LogIn className="w-4 h-4" /> Login
+                        </Link>
+                        <Link
+                          to="/signup"
+                          onClick={close}
+                          className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/signup'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                            }`}
+                        >
+                          <UserPlus className="w-4 h-4" /> Sign Up
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
       </div>
     </header>

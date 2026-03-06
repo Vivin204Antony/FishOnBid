@@ -40,11 +40,14 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (email != null &&
                         SecurityContextHolder.getContext().getAuthentication() == null) {
 
+                    String role = jwtUtil.extractRole(token);
+                    String springRole = "ROLE_" + (role != null ? role.toUpperCase() : "USER");
+
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     email,
                                     null,
-                                    List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                                    List.of(new SimpleGrantedAuthority(springRole))
                             );
 
                     authentication.setDetails(

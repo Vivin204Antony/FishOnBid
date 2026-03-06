@@ -82,7 +82,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 pb-12">
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-900 text-white py-14 px-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />

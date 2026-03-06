@@ -63,6 +63,9 @@ public class SecurityConfig {
                         // AI endpoints - temporarily permit-all for testing (re-secure after verification)
                         .requestMatchers("/api/ai/**").permitAll()
                         
+                        // Admin-only endpoints — must have ROLE_ADMIN
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

@@ -51,6 +51,12 @@ public class AuctionController {
         return auctionService.getClosedAuctions();
     }
 
+    // 🔹 Get closed auctions WITH at least one bid — for the Results page
+    @GetMapping("/results")
+    public List<Auction> getAuctionResults() {
+        return auctionService.getClosedAuctionsWithBids();
+    }
+
     // 🔹 Get auction by ID
     @GetMapping("/{id}")
     public Auction getAuctionById(@PathVariable Long id) {
@@ -60,6 +66,10 @@ public class AuctionController {
     // 🔹 Create new auction
     @PostMapping
     public Auction createAuction(@RequestBody Auction auction) {
+        // Capture the seller's email so admin panel can distinguish Auctioneers from Bidders
+        String sellerEmail = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        auction.setSellerEmail(sellerEmail);
         return auctionService.createAuction(auction);
     }
 

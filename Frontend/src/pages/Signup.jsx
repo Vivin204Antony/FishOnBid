@@ -50,7 +50,7 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 py-12 px-4">
       <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-md w-full">
         {/* Header */}
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-10 text-white text-center">

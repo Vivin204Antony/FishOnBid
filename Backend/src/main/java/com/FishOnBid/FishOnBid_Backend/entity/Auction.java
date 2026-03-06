@@ -84,4 +84,10 @@ public class Auction {
      */
     @Enumerated(EnumType.STRING)
     private AuctionDataSource dataSource = AuctionDataSource.USER_MANUAL;
+
+    /**
+     * Email of the user who created this auction (Auctioneer/Seller).
+     * Used by admin panel to distinguish Auctioneers from Bidders.
+     */
+    private String sellerEmail;
 }

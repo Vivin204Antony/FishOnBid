@@ -84,7 +84,7 @@ export default function Auctions() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 pb-20">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-12 px-6 shadow-md">
         <div className="max-w-6xl mx-auto">

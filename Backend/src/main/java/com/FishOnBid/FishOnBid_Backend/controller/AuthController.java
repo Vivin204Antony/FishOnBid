@@ -69,7 +69,7 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole() != null ? user.getRole() : "USER");
 
         // Return token AND user data
         Map<String, Object> response = new HashMap<>();

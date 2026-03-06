@@ -212,6 +212,14 @@ public class AuctionService {
     }
 
     /**
+     * Get closed auctions that have at least one bid — for the Results page.
+     * Excludes zero-activity system-generated auctions.
+     */
+    public List<Auction> getClosedAuctionsWithBids() {
+        return auctionRepo.findClosedAuctionsWithBids(Instant.now());
+    }
+
+    /**
      * Get distinct fish types available in the system
      */
     public List<String> getAvailableFishTypes() {

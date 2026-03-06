@@ -148,4 +148,26 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             @Param("location") String location,
             @Param("fromDate") Instant fromDate
     );
+
+    /**
+     * Find auctions created by a specific seller (Auctioneer).
+     */
+    List<Auction> findBySellerEmail(String sellerEmail);
+
+    /**
+     * Count auctions created by a specific seller.
+     */
+    long countBySellerEmail(String sellerEmail);
+
+    /**
+     * Closed auctions that have at least one bid — used by the Results page.
+     * Filters out system-generated / zero-activity auctions.
+     */
+    @Query("""
+        SELECT DISTINCT a FROM Auction a
+        WHERE (a.active = false OR a.endTime <= :now)
+        AND EXISTS (SELECT b FROM Bid b WHERE b.auction = a)
+        ORDER BY a.endTime DESC
+    """)
+    List<Auction> findClosedAuctionsWithBids(@Param("now") Instant now);
 }

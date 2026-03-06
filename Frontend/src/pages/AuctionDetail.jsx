@@ -170,13 +170,13 @@ export default function AuctionDetail() {
 
   // ── Loading / not found ───────────────────────────
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950">
       <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
     </div>
   );
 
   if (!auction) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-6">
       <div className="text-center bg-white p-12 rounded-3xl shadow-xl max-w-md">
         <Fish className="w-16 h-16 mx-auto text-gray-300 mb-4" />
         <h2 className="text-2xl font-bold text-gray-800">Auction Not Found</h2>
@@ -194,7 +194,7 @@ export default function AuctionDetail() {
 
   // ── Render ────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 pb-12">
 
       {/* Top Bar */}
       <div className="bg-white border-b border-gray-100 px-6 py-3">

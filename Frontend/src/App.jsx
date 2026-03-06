@@ -8,6 +8,8 @@ import AuctionDetail from "./pages/AuctionDetail";
 import AuctionSummary from "./pages/AuctionSummary";
 import CreateAuction from "./pages/CreateAuction";
 import Landing from "./pages/Landing";
+import AdminPanel from "./pages/AdminPanel";
+import AuctionResults from "./pages/AuctionResults";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -33,6 +35,12 @@ export default function App() {
           {/* Auction detail + summary — public so buyers can share links */}
           <Route path="/auction/:id" element={<AuctionDetail />} />
           <Route path="/auction/:id/summary" element={<AuctionSummary />} />
+
+          {/* Results — public page, completed auctions with bids */}
+          <Route path="/results" element={<AuctionResults />} />
+
+          {/* Admin panel — only accessible by ADMIN role (page itself redirects non-admins) */}
+          <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
 
           {/* Root: always Landing — the page itself adapts CTAs based on auth */}
           <Route path="/" element={<Landing />} />
