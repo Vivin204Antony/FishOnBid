@@ -403,7 +403,7 @@ export default function Landing() {
                              flex items-center justify-center text-lg font-black">🐟</div>
                         <div className="text-left">
                             <p className="font-bold">FishOnBid Team</p>
-                            <p className="text-slate-400 text-sm">Smart India Hackathon Project</p>
+                            <p className="text-slate-400 text-sm">Final Year Academic Major Project</p>
                         </div>
                     </div>
                 </div>
