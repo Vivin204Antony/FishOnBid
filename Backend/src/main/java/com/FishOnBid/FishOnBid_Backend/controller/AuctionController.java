@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -78,12 +77,14 @@ public class AuctionController {
     @PostMapping("/{id}/bid")
     public Bid placeBid(
             @PathVariable Long id,
-            @RequestBody Map<String, Double> request,
-            @RequestHeader("Authorization") String authHeader
+            @RequestBody Map<String, Double> request
     ) {
         String email = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication().getName();
-        double amount = request.get("amount");
+        Double amount = request.get("amount");
+        if (amount == null) {
+            throw new RuntimeException("Bid amount is required");
+        }
         return auctionService.placeBid(id, amount, email);
     }
 
