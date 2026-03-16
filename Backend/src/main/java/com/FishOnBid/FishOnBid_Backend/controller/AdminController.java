@@ -46,7 +46,7 @@ public class AdminController {
         long totalUsers    = userRepository.count();
         long totalAuctions = auctionRepository.count();
         long liveAuctions  = auctionRepository.findAll().stream()
-                .filter(a -> Boolean.TRUE.equals(a.isActive())
+            .filter(a -> a.isActive()
                              && a.getEndTime() != null
                              && a.getEndTime().isAfter(Instant.now()))
                 .count();
@@ -214,10 +214,10 @@ public class AdminController {
             Auction auction = new Auction();
             auction.setFishName((String) item.get("fishName"));
             auction.setLocation((String) item.get("location"));
-            auction.setStartPrice(((Number) item.get("startPrice")).doubleValue());
-            auction.setCurrentPrice(((Number) item.get("currentPrice")).doubleValue());
-            auction.setQuantityKg(item.get("quantityKg") != null ? ((Number) item.get("quantityKg")).doubleValue() : null);
-            auction.setFreshnessScore(item.get("freshnessScore") != null ? ((Number) item.get("freshnessScore")).intValue() : null);
+            auction.setStartPrice(readRequiredDouble(item, "startPrice"));
+            auction.setCurrentPrice(readRequiredDouble(item, "currentPrice"));
+            auction.setQuantityKg(readOptionalDouble(item, "quantityKg"));
+            auction.setFreshnessScore(readOptionalInteger(item, "freshnessScore"));
             auction.setActive(false);
 
             String endTimeStr = (String) item.get("endTime");
@@ -241,5 +241,35 @@ public class AdminController {
                 "count",   saved.size(),
                 "message", "Historical data imported successfully"
         ));
+    }
+
+    private static double readRequiredDouble(Map<String, Object> item, String key) {
+        Object value = item.get(key);
+        if (!(value instanceof Number numberValue)) {
+            throw new IllegalArgumentException("Invalid or missing numeric field: " + key);
+        }
+        return numberValue.doubleValue();
+    }
+
+    private static Double readOptionalDouble(Map<String, Object> item, String key) {
+        Object value = item.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (!(value instanceof Number numberValue)) {
+            throw new IllegalArgumentException("Invalid numeric field: " + key);
+        }
+        return numberValue.doubleValue();
+    }
+
+    private static Integer readOptionalInteger(Map<String, Object> item, String key) {
+        Object value = item.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (!(value instanceof Number numberValue)) {
+            throw new IllegalArgumentException("Invalid numeric field: " + key);
+        }
+        return numberValue.intValue();
     }
 }

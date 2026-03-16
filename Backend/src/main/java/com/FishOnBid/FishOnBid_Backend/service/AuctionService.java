@@ -111,6 +111,10 @@ public class AuctionService {
         Auction auction = auctionRepo.findByIdForUpdate(auctionId)
                 .orElseThrow(() -> new RuntimeException("Auction not found"));
 
+        if (auction.getEndTime() == null) {
+            throw new RuntimeException("Auction end time is not configured");
+        }
+
         // Auto-close check
         if (Instant.now().isAfter(auction.getEndTime())) {
             auction.setActive(false);
