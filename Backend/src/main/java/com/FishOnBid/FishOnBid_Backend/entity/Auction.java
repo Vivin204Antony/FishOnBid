@@ -76,6 +76,13 @@ public class Auction {
     @Column(length = 500)
     private String sellerNotes;
 
+    /**
+     * Optional video link (YouTube / Google Drive) supplied by the seller.
+     * Displayed as an embedded player on the auction detail page for buyers.
+     */
+    @Column(length = 1000)
+    private String videoUrl;
+
     @Column(length = 1000)
     private String aiExplanation;
 

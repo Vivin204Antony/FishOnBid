@@ -40,6 +40,30 @@ export default function AuctionDetail() {
     return `${local.slice(0, 2)}***@${domain}`;
   };
 
+  // Convert YouTube watch URL → embed URL for <iframe>
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    try {
+      // youtube.com/watch?v=VIDEO_ID  →  youtube.com/embed/VIDEO_ID
+      const parsed = new URL(url);
+      if (parsed.hostname.includes('youtube.com') && parsed.searchParams.get('v')) {
+        return `https://www.youtube.com/embed/${parsed.searchParams.get('v')}`;
+      }
+      // youtu.be/VIDEO_ID  →  youtube.com/embed/VIDEO_ID
+      if (parsed.hostname === 'youtu.be') {
+        return `https://www.youtube.com/embed${parsed.pathname}`;
+      }
+      // Google Drive: /file/d/FILE_ID/view  →  /file/d/FILE_ID/preview
+      if (parsed.hostname.includes('drive.google.com')) {
+        return url.replace('/view', '/preview');
+      }
+      // Already an embed or unknown — return as-is
+      return url;
+    } catch (_) {
+      return null;
+    }
+  };
+
   const timeAgo = (instant) => {
     if (!instant) return "";
     const secs = Math.floor((Date.now() - new Date(instant).getTime()) / 1000);
@@ -266,6 +290,27 @@ export default function AuctionDetail() {
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <p className="text-xs text-gray-400 font-bold uppercase mb-1">Seller Notes</p>
                     <p className="text-sm text-gray-700">{auction.sellerNotes}</p>
+                  </div>
+                )}
+
+                {/* ── Video Embed ── */}
+                {auction.videoUrl && getEmbedUrl(auction.videoUrl) && (
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <p className="text-xs text-gray-400 font-bold uppercase mb-2 flex items-center gap-1">
+                      🎬 Seller Video Preview
+                    </p>
+                    <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                      <iframe
+                        src={getEmbedUrl(auction.videoUrl)}
+                        title="Fish catch video"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full rounded-lg border border-gray-200"
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-400 text-center">
+                      📹 Watch the catch before you bid
+                    </p>
                   </div>
                 )}
               </div>

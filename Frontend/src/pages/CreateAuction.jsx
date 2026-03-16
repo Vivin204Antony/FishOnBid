@@ -31,7 +31,8 @@ export default function CreateAuction() {
         location: '',
         quantityKg: '',
         durationHours: 24,
-        sellerNotes: ''
+        sellerNotes: '',
+        videoUrl: ''
     });
 
     // ──── Metadata from backend ────
@@ -356,6 +357,7 @@ export default function CreateAuction() {
                 location: form.location || null,
                 quantityKg: form.quantityKg ? parseFloat(form.quantityKg) : null,
                 sellerNotes: form.sellerNotes || null,
+                videoUrl: form.videoUrl ? form.videoUrl.trim() : null,
                 freshnessScore: visionResult?.freshnessScore || null,
                 aiSuggestedPrice: aiResult?.suggestedPrice || null,
                 aiSuggestionAccepted: aiResult?.suggestedPrice &&
@@ -947,6 +949,27 @@ export default function CreateAuction() {
                                             <option value={24}>24 Hours</option>
                                             <option value={48}>48 Hours</option>
                                         </select>
+                                    </div>
+                                )}
+
+                                {/* Video Link (Optional) */}
+                                {hasImage && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                            🎬 Video Link <span className="text-xs text-gray-400 font-normal">(Optional — YouTube or Google Drive)</span>
+                                        </label>
+                                        <input
+                                            type="url"
+                                            id="videoUrl"
+                                            name="videoUrl"
+                                            value={form.videoUrl}
+                                            onChange={handleChange}
+                                            placeholder="e.g., https://youtube.com/watch?v=..."
+                                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                                        />
+                                        <p className="mt-1 text-xs text-gray-400">
+                                            📹 Paste a video link so buyers can watch your catch before bidding
+                                        </p>
                                     </div>
                                 )}
 
