@@ -25,7 +25,11 @@ export default function Login() {
       login(res.data.token, res.data.user);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data || "Invalid credentials");
+      setError(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Invalid credentials. Please check your email and password."
+      );
     } finally {
       setLoading(false);
     }
