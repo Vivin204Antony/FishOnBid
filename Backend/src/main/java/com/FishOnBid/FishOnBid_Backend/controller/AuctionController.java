@@ -17,15 +17,16 @@ import com.FishOnBid.FishOnBid_Backend.entity.Auction;
 import com.FishOnBid.FishOnBid_Backend.entity.Bid;
 import com.FishOnBid.FishOnBid_Backend.service.AuctionService;
 
-import lombok.RequiredArgsConstructor;
-
 @RestController
 @RequestMapping("/api/auctions")
-@RequiredArgsConstructor
 @CrossOrigin
 public class AuctionController {
 
     private final AuctionService auctionService;
+
+    public AuctionController(AuctionService auctionService) {
+        this.auctionService = auctionService;
+    }
 
     // 🔹 Get all auctions
     @GetMapping

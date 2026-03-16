@@ -4,8 +4,11 @@
     "java.import.gradle.enabled": false,
     "java.import.maven.enabled": true,
     "java.import.exclusions": [
-        "**/pom.xml",
-        "!**/Backend/pom.xml"
+        "/src/**",
+        "/target/**",
+        "/dev-dist/**",
+        "/dist/**",
+        "/node_modules/**"
     ],
     "files.exclude": {
         "src/": true,
@@ -17,9 +20,5 @@
         "dev-dist": true,
         "dist": true,
         "node_modules": true
-    },
-    "java.project.sourcePaths": [
-        "Backend/src/main/java"
-    ],
-    "java.project.referencedLibraries": []
+    }
 }

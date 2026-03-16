@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import api from "../api/axios";
 import { Fish, Mail, Lock, LogIn, UserPlus, AlertCircle, Loader2 } from 'lucide-react';
@@ -14,6 +14,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +24,8 @@ export default function Login() {
     try {
       const res = await api.post("/auth/login", { email, password });
       login(res.data.token, res.data.user);
-      navigate("/");
+      const from = location.state?.from || "/dashboard";
+      navigate(from, { replace: true });
     } catch (err) {
       setError(
         err.response?.data?.error ||

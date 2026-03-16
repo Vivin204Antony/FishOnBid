@@ -121,29 +121,31 @@ export default function Header() {
                       </Link>
                     )}
 
-                    {/* Auctions — always visible */}
-                    <Link
-                      to="/auctions"
-                      onClick={close}
-                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/auctions'
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                        }`}
-                    >
-                      <Gavel className="w-4 h-4" /> Auctions
-                    </Link>
+                    {user && (
+                      <>
+                        <Link
+                          to="/auctions"
+                          onClick={close}
+                          className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/auctions'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                            }`}
+                        >
+                          <Gavel className="w-4 h-4" /> Auctions
+                        </Link>
 
-                    {/* Results — completed auction results */}
-                    <Link
-                      to="/results"
-                      onClick={close}
-                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/results'
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                        }`}
-                    >
-                      <Trophy className="w-4 h-4" /> Results
-                    </Link>
+                        <Link
+                          to="/results"
+                          onClick={close}
+                          className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${location.pathname === '/results'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                            }`}
+                        >
+                          <Trophy className="w-4 h-4" /> Results
+                        </Link>
+                      </>
+                    )}
 
                     <div className="my-1 mx-3 h-px bg-gray-100" />
 
