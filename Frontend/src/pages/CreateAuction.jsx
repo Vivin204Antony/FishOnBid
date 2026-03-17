@@ -64,7 +64,6 @@ export default function CreateAuction() {
     const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
     const [videoRecording, setVideoRecording] = useState(false);
     const [videoRecordingTime, setVideoRecordingTime] = useState(0);
-    const videoInputRef = useRef(null);
     const videoFileInputRef = useRef(null);
     const videoLiveRef = useRef(null);
     const videoStreamRef = useRef(null);
