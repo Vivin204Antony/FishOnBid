@@ -7,7 +7,7 @@ import {
     ShoppingBag, Sparkles, TrendingUp, Lock, Unlock
 } from "lucide-react";
 
-const API = "http://localhost:9001/api/admin";
+const API = "http://localhost:9090/api/admin";
 
 /* ── Utility: badge config by userType ── */
 const USER_TYPE_CONFIG = {

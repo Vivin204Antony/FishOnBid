@@ -7,7 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import {
     Fish, MapPin, Scale, Camera, FileText, Clock, Sparkles,
     CheckCircle2, AlertCircle, Loader2, Rocket,
-    Info, ThumbsUp, Eye, X, ImagePlus, Zap
+    Info, ThumbsUp, Eye, X, ImagePlus, Zap, Video, Upload, Trash2
 } from 'lucide-react';
 
 /**
@@ -57,6 +57,20 @@ export default function CreateAuction() {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiResult, setAiResult] = useState(null);
     const [aiError, setAiError] = useState('');
+
+    // ──── Video Upload State ────
+    const [videoUploading, setVideoUploading] = useState(false);
+    const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+    const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
+    const [videoRecording, setVideoRecording] = useState(false);
+    const [videoRecordingTime, setVideoRecordingTime] = useState(0);
+    const videoInputRef = useRef(null);
+    const videoFileInputRef = useRef(null);
+    const videoLiveRef = useRef(null);
+    const videoStreamRef = useRef(null);
+    const mediaRecorderRef = useRef(null);
+    const recordedChunksRef = useRef([]);
+    const recordingTimerRef = useRef(null);
 
     // ──── Submission State ────
     const [loading, setLoading] = useState(false);
@@ -332,6 +346,157 @@ export default function CreateAuction() {
     const handleAcceptAiPrice = () => {
         if (aiResult?.suggestedPrice) {
             setForm(prev => ({ ...prev, startPrice: aiResult.suggestedPrice.toFixed(2) }));
+        }
+    };
+
+    // ──────────────────────────────────────────────
+    // VIDEO: Record + Upload to Cloudinary
+    // ──────────────────────────────────────────────
+    const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+    const MAX_RECORD_SECONDS = 60;
+
+    const uploadToCloudinary = async (file) => {
+        setVideoUploading(true);
+        setVideoUploadProgress(0);
+        setError('');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('resource_type', 'video');
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    setVideoUploadProgress(Math.round((event.loaded / event.total) * 100));
+                }
+            };
+
+            const result = await new Promise((resolve, reject) => {
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        reject(new Error('Upload failed'));
+                    }
+                };
+                xhr.onerror = () => reject(new Error('Upload failed'));
+                xhr.send(formData);
+            });
+
+            setForm(prev => ({ ...prev, videoUrl: result.secure_url }));
+            setVideoPreviewUrl(result.secure_url);
+        } catch (err) {
+            setError('Video upload failed. Check your Cloudinary config.');
+        } finally {
+            setVideoUploading(false);
+            setVideoUploadProgress(0);
+        }
+    };
+
+    // ── Record from camera ──
+    const startVideoRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: true
+            });
+            videoStreamRef.current = stream;
+            if (videoLiveRef.current) {
+                videoLiveRef.current.srcObject = stream;
+                videoLiveRef.current.play();
+            }
+
+            recordedChunksRef.current = [];
+            const recorder = new MediaRecorder(stream, {
+                mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                    ? 'video/webm;codecs=vp9'
+                    : 'video/webm'
+            });
+
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+            };
+
+            recorder.onstop = async () => {
+                const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+                const file = new File([blob], `fish-video-${Date.now()}.webm`, { type: 'video/webm' });
+                stopVideoStream();
+                await uploadToCloudinary(file);
+            };
+
+            mediaRecorderRef.current = recorder;
+            recorder.start(1000);
+            setVideoRecording(true);
+            setVideoRecordingTime(0);
+
+            recordingTimerRef.current = setInterval(() => {
+                setVideoRecordingTime(prev => {
+                    if (prev + 1 >= MAX_RECORD_SECONDS) {
+                        stopVideoRecording();
+                        return prev;
+                    }
+                    return prev + 1;
+                });
+            }, 1000);
+
+        } catch (err) {
+            setError('Could not access camera. Try uploading a file instead.');
+        }
+    };
+
+    const stopVideoRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+        }
+        if (recordingTimerRef.current) {
+            clearInterval(recordingTimerRef.current);
+            recordingTimerRef.current = null;
+        }
+        setVideoRecording(false);
+        setVideoRecordingTime(0);
+    };
+
+    const stopVideoStream = () => {
+        if (videoStreamRef.current) {
+            videoStreamRef.current.getTracks().forEach(t => t.stop());
+            videoStreamRef.current = null;
+        }
+    };
+
+    // ── Pick file from gallery ──
+    const handleVideoFileSelect = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('video/')) {
+            setError('Please select a video file');
+            return;
+        }
+        if (file.size > 100 * 1024 * 1024) {
+            setError('Video must be under 100MB');
+            return;
+        }
+        await uploadToCloudinary(file);
+    };
+
+    const handleRemoveVideo = async () => {
+        const urlToDelete = form.videoUrl;
+        setForm(prev => ({ ...prev, videoUrl: '' }));
+        setVideoPreviewUrl(null);
+        stopVideoStream();
+        if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+
+        // Delete from Cloudinary in the background
+        if (urlToDelete && urlToDelete.includes('cloudinary.com')) {
+            try {
+                await api.delete('/auctions/video', { data: { videoUrl: urlToDelete } });
+            } catch (_) {
+                // Non-critical — video is already removed from the form
+            }
         }
     };
 
@@ -952,24 +1117,113 @@ export default function CreateAuction() {
                                     </div>
                                 )}
 
-                                {/* Video Link (Optional) */}
+                                {/* Video Record / Upload (Optional) */}
                                 {hasImage && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                            🎬 Video Link <span className="text-xs text-gray-400 font-normal">(Optional — YouTube or Google Drive)</span>
+                                            <Video className="w-4 h-4" /> Video of Your Catch
+                                            <span className="text-xs text-gray-400 font-normal">(Optional — max 60s / 100MB)</span>
                                         </label>
+
+                                        {/* ── Uploaded preview ── */}
+                                        {videoPreviewUrl ? (
+                                            <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-black">
+                                                <video
+                                                    src={videoPreviewUrl}
+                                                    controls
+                                                    className="w-full max-h-48 object-contain"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRemoveVideo}
+                                                    className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+
+                                        /* ── Recording live ── */
+                                        ) : videoRecording ? (
+                                            <div className="rounded-lg overflow-hidden border-2 border-red-400 bg-black relative">
+                                                <video
+                                                    ref={videoLiveRef}
+                                                    muted
+                                                    playsInline
+                                                    className="w-full max-h-52 object-cover"
+                                                />
+                                                <div className="absolute top-3 left-3 flex items-center gap-2">
+                                                    <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                                                    <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">
+                                                        REC {videoRecordingTime}s / {MAX_RECORD_SECONDS}s
+                                                    </span>
+                                                </div>
+                                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
+                                                    <div
+                                                        className="h-full bg-red-500 transition-all duration-1000"
+                                                        style={{ width: `${(videoRecordingTime / MAX_RECORD_SECONDS) * 100}%` }}
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={stopVideoRecording}
+                                                    className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-5 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-red-700 shadow-lg"
+                                                >
+                                                    <X className="w-4 h-4" /> Stop Recording
+                                                </button>
+                                            </div>
+
+                                        /* ── Uploading ── */
+                                        ) : videoUploading ? (
+                                            <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center bg-blue-50">
+                                                <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-2" />
+                                                <p className="text-sm font-bold text-blue-700">Uploading... {videoUploadProgress}%</p>
+                                                <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
+                                                    <div
+                                                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                        style={{ width: `${videoUploadProgress}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                        /* ── Default: two buttons ── */
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={startVideoRecording}
+                                                    className="border-2 border-dashed border-red-200 rounded-lg p-5 text-center hover:border-red-400 hover:bg-red-50 transition-all cursor-pointer group"
+                                                >
+                                                    <Camera className="w-7 h-7 text-red-300 group-hover:text-red-500 mx-auto mb-2 transition-colors" />
+                                                    <p className="text-sm font-medium text-gray-600 group-hover:text-red-600">
+                                                        Record Video
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Up to 60 seconds
+                                                    </p>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => videoFileInputRef.current?.click()}
+                                                    className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group"
+                                                >
+                                                    <Upload className="w-7 h-7 text-gray-400 group-hover:text-blue-500 mx-auto mb-2 transition-colors" />
+                                                    <p className="text-sm font-medium text-gray-600 group-hover:text-blue-600">
+                                                        Upload Video
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        From gallery / files
+                                                    </p>
+                                                </button>
+                                            </div>
+                                        )}
+
                                         <input
-                                            type="url"
-                                            id="videoUrl"
-                                            name="videoUrl"
-                                            value={form.videoUrl}
-                                            onChange={handleChange}
-                                            placeholder="e.g., https://youtube.com/watch?v=..."
-                                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                                            ref={videoFileInputRef}
+                                            type="file"
+                                            accept="video/*"
+                                            onChange={handleVideoFileSelect}
+                                            className="hidden"
                                         />
-                                        <p className="mt-1 text-xs text-gray-400">
-                                            📹 Paste a video link so buyers can watch your catch before bidding
-                                        </p>
                                     </div>
                                 )}
 

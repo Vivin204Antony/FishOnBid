@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.FishOnBid.FishOnBid_Backend.entity.Auction;
 import com.FishOnBid.FishOnBid_Backend.entity.Bid;
 import com.FishOnBid.FishOnBid_Backend.service.AuctionService;
+import com.FishOnBid.FishOnBid_Backend.service.CloudinaryService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 @RequestMapping("/api/auctions")
@@ -22,9 +24,11 @@ import com.FishOnBid.FishOnBid_Backend.service.AuctionService;
 public class AuctionController {
 
     private final AuctionService auctionService;
+    private final CloudinaryService cloudinaryService;
 
-    public AuctionController(AuctionService auctionService) {
+    public AuctionController(AuctionService auctionService, CloudinaryService cloudinaryService) {
         this.auctionService = auctionService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     // 🔹 Get all auctions
@@ -118,5 +122,13 @@ public class AuctionController {
         List<String> fishTypes = auctionService.getAvailableFishTypes();
         List<String> locations = auctionService.getAvailableLocations();
         return AuctionMetadataDTO.of(fishTypes, locations);
+    }
+
+    // 🔹 Delete a video from Cloudinary (used when seller removes video before submitting)
+    @DeleteMapping("/video")
+    public Map<String, Object> deleteVideo(@RequestBody Map<String, String> request) {
+        String videoUrl = request.get("videoUrl");
+        boolean deleted = cloudinaryService.deleteVideo(videoUrl);
+        return Map.of("deleted", deleted);
     }
 }
