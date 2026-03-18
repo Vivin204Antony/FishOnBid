@@ -231,18 +231,18 @@ export default function AuctionDetail() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 pb-12">
 
       {/* Top Bar */}
-      <div className="bg-white border-b border-gray-100 px-6 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
           <button onClick={() => navigate('/auctions')}
-            className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-medium text-sm transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Auctions
+            className="flex items-center gap-1.5 text-gray-500 hover:text-blue-600 font-medium text-xs sm:text-sm transition-colors flex-shrink-0">
+            <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Back to Auctions</span><span className="sm:hidden">Back</span>
           </button>
-          <div className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-1
+          <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-1 flex-shrink-0
             ${isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
             {isLive ? <TrendingUp className="w-3 h-3" /> : <Trophy className="w-3 h-3" />}
             {isLive ? 'LIVE' : 'CLOSED'}
           </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5
+          <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold inline-flex items-center gap-1 flex-shrink-0
             ${wsConnected ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
             {wsConnected ? <><Wifi className="w-3.5 h-3.5" /> Live</> : <><WifiOff className="w-3.5 h-3.5" /> Polling</>}
           </div>
@@ -269,7 +269,7 @@ export default function AuctionDetail() {
                 )}
               </div>
               <div className="p-8">
-                <h1 className="text-4xl font-black text-gray-800 mb-6">{auction.fishName}</h1>
+                <h1 className="text-2xl sm:text-4xl font-black text-gray-800 mb-6 break-words">{auction.fishName}</h1>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
                     <p className="text-xs text-blue-500 font-bold uppercase mb-1 flex items-center gap-1">
@@ -389,7 +389,7 @@ export default function AuctionDetail() {
 
               <div className="text-center mb-8">
                 <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Current Price</p>
-                <p className={`text-6xl font-black transition-all duration-300
+                <p className={`text-4xl sm:text-6xl font-black transition-all duration-300
                   ${priceFlash ? 'text-green-600 scale-110' : 'text-gray-900'}`}>
                   ₹{auction.currentPrice?.toLocaleString('en-IN') || '0'}
                 </p>

@@ -1,7 +1,13 @@
 import axios from "axios";
 
+const backendPort = 8085;
+const baseURL =
+  window.location.hostname === "localhost"
+    ? `http://localhost:${backendPort}/api`
+    : `http://${window.location.hostname}:${backendPort}/api`;
+
 const api = axios.create({
-  baseURL: "http://localhost:8085/api",
+  baseURL,
 });
 
 api.interceptors.request.use((config) => {

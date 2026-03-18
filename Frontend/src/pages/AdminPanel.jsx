@@ -10,7 +10,9 @@ import {
     ChevronDown, ChevronUp
 } from "lucide-react";
 
-const API = "http://localhost:8085/api/admin";
+const API = window.location.hostname === "localhost"
+    ? "http://localhost:8085/api/admin"
+    : `http://${window.location.hostname}:8085/api/admin`;
 
 /* ── Utility: badge config by userType ── */
 const USER_TYPE_CONFIG = {
@@ -346,11 +348,11 @@ function MarketDataPanel({ status, records, loading, syncing, syncResult, onSync
             </div>
 
             {/* ── Sub-tabs ── */}
-            <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm w-fit">
+            <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm overflow-x-auto">
                 {tabs.map(({ id, label, icon: Icon }) => (
                     <button key={id} onClick={() => setMarketView(id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${marketView === id ? "bg-teal-600 text-white shadow" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
-                        <Icon className="w-3.5 h-3.5" /> {label}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition whitespace-nowrap ${marketView === id ? "bg-teal-600 text-white shadow" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
+                        <Icon className="w-3.5 h-3.5 flex-shrink-0" /> {label}
                     </button>
                 ))}
             </div>
@@ -675,7 +677,14 @@ export default function AdminPanel() {
         setSyncResult(null);
         try {
             const r = await fetch(`${API}/market/sync`, { method: "POST", headers: authHeaders });
-            const data = await r.json();
+            const text = await r.text();
+            if (!r.ok) {
+                const errMsg = text ? text : `Server returned ${r.status}`;
+                setSyncResult({ status: "failed", error: errMsg });
+                setError(`Sync failed: ${errMsg}`);
+                return;
+            }
+            const data = text ? JSON.parse(text) : {};
             setSyncResult(data);
             if (data.status === "success") {
                 showFlash(`Synced ${data.recordsImported} records from govt APIs`);
@@ -784,18 +793,18 @@ export default function AdminPanel() {
 
                 {/* ── Tabs + Search ── */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
+                    <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm overflow-x-auto">
                         {[
                             { id: "users", label: "Users", icon: Users, count: users.length },
                             { id: "auctions", label: "Auctions", icon: Gavel, count: auctions.length },
-                            { id: "market", label: "Market Data", icon: Database, count: marketStatus?.totalRecords ?? "—" },
+                            { id: "market", label: "Market", icon: Database, count: marketStatus?.totalRecords ?? "—" },
                         ].map(({ id, label, icon: Icon, count }) => (
                             <button
                                 key={id}
                                 onClick={() => { setActiveTab(id); setSearch(""); setTypeFilter("All"); }}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === id ? "bg-slate-800 text-white shadow" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${activeTab === id ? "bg-slate-800 text-white shadow" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
                             >
-                                <Icon className="w-4 h-4" />
+                                <Icon className="w-4 h-4 flex-shrink-0" />
                                 {label}
                                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === id ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
                                     {count}

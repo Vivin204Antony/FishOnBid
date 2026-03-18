@@ -34,7 +34,7 @@ export default function Landing() {
                         AI-Powered Fish Auction Platform · India
                     </div>
 
-                    <h1 className="text-6xl md:text-7xl font-black tracking-tight mb-6 leading-none">
+                    <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight mb-6 leading-none">
                         Sell Fresh Catch.
                         <br />
                         <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
@@ -419,7 +419,7 @@ export default function Landing() {
                 </div>
                 <div className="relative max-w-3xl mx-auto">
                     <Anchor className="w-12 h-12 mx-auto mb-6 text-cyan-300" />
-                    <h2 className="text-5xl font-black mb-6">
+                    <h2 className="text-3xl sm:text-5xl font-black mb-6">
                         Ready to Get the Best Price for Your Catch?
                     </h2>
                     <p className="text-blue-100 text-xl mb-10 max-w-xl mx-auto">

@@ -101,7 +101,7 @@ export default function AuctionSummary() {
                             <Trophy className="w-7 h-7 text-yellow-300" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black">{fishName} — Auction #{id}</h1>
+                            <h1 className="text-xl sm:text-3xl font-black break-words">{fishName} — Auction #{id}</h1>
                             <p className="text-indigo-200 text-sm mt-0.5">
                                 {isClosed ? "✅ Auction Closed" : "🟢 Auction Active"} · {totalBids} bid{totalBids !== 1 ? "s" : ""} placed
                             </p>
@@ -135,7 +135,7 @@ export default function AuctionSummary() {
                         </p>
                         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                             <div>
-                                <p className="text-5xl font-black">₹{winningBid.amount?.toLocaleString("en-IN")}</p>
+                                <p className="text-3xl sm:text-5xl font-black">₹{winningBid.amount?.toLocaleString("en-IN")}</p>
                                 <p className="text-yellow-100 mt-2 text-base">🏅 {maskEmail(winningBid.bidderEmail)}</p>
                                 <p className="text-yellow-200 text-xs mt-1">{formatDate(winningBid.bidTime)}</p>
                             </div>
@@ -259,31 +259,33 @@ export default function AuctionSummary() {
                             </div>
 
                             {/* Bid table */}
-                            <table className="w-full text-sm">
+                            <div className="overflow-x-auto">
+                            <table className="w-full text-sm min-w-[480px]">
                                 <thead>
                                     <tr className="bg-gray-50 text-xs text-gray-400 uppercase tracking-widest">
-                                        <th className="px-6 py-3 text-left font-bold">#</th>
-                                        <th className="px-6 py-3 text-left font-bold">Bidder</th>
-                                        <th className="px-6 py-3 text-right font-bold">Amount</th>
-                                        <th className="px-6 py-3 text-right font-bold">Time</th>
+                                        <th className="px-4 sm:px-6 py-3 text-left font-bold">#</th>
+                                        <th className="px-4 sm:px-6 py-3 text-left font-bold">Bidder</th>
+                                        <th className="px-4 sm:px-6 py-3 text-right font-bold">Amount</th>
+                                        <th className="px-4 sm:px-6 py-3 text-right font-bold">Time</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
                                     {bidHistory.map((bid, idx) => (
                                         <tr key={bid.id ?? idx}
                                             className={`transition-colors ${idx === 0 ? "bg-yellow-50" : "hover:bg-gray-50"}`}>
-                                            <td className="px-6 py-3 font-black text-gray-400">
+                                            <td className="px-4 sm:px-6 py-3 font-black text-gray-400">
                                                 {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
                                             </td>
-                                            <td className="px-6 py-3 font-bold text-gray-700">{maskEmail(bid.bidderEmail)}</td>
-                                            <td className={`px-6 py-3 text-right font-black ${idx === 0 ? "text-yellow-600" : "text-gray-700"}`}>
+                                            <td className="px-4 sm:px-6 py-3 font-bold text-gray-700">{maskEmail(bid.bidderEmail)}</td>
+                                            <td className={`px-4 sm:px-6 py-3 text-right font-black ${idx === 0 ? "text-yellow-600" : "text-gray-700"}`}>
                                                 ₹{bid.amount?.toLocaleString("en-IN")}
                                             </td>
-                                            <td className="px-6 py-3 text-right text-gray-400 text-xs">{formatDate(bid.bidTime)}</td>
+                                            <td className="px-4 sm:px-6 py-3 text-right text-gray-400 text-xs">{formatDate(bid.bidTime)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+                            </div>
                         </>
                     )}
                 </div>

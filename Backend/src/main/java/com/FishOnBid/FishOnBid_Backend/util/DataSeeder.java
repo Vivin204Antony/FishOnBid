@@ -1,10 +1,13 @@
 package com.FishOnBid.FishOnBid_Backend.util;
 
 import com.FishOnBid.FishOnBid_Backend.entity.Auction;
+import com.FishOnBid.FishOnBid_Backend.entity.User;
 import com.FishOnBid.FishOnBid_Backend.repository.AuctionRepository;
+import com.FishOnBid.FishOnBid_Backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -16,6 +19,7 @@ import java.util.Random;
 /**
  * DataSeeder - Automated historical data generator for FishOnBid.
  * Ensures the system always has 500+ data points for high-quality RAG evaluation.
+ * Also seeds default user accounts if they don't exist.
  */
 @Component
 @RequiredArgsConstructor
@@ -23,19 +27,43 @@ import java.util.Random;
 public class DataSeeder implements CommandLineRunner {
 
     private final AuctionRepository auctionRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final Random random = new Random();
 
     @Override
     public void run(String... args) {
+        seedDefaultUsers();
+
         long count = auctionRepository.count();
         log.info("Current total auction count: {}", count);
 
         // We targeted 500 records before, let's now target 550 (500 historical + 50 live)
         if (count < 550) {
             log.info("Detected low data volume ({} records). Re-seeding diversified data...", count);
-            seedDiversifiedData(500, 50); 
+            seedDiversifiedData(500, 50);
         } else {
             log.info("Sufficient data present ({} records). Skipping automated seeding.", count);
+        }
+    }
+
+    private void seedDefaultUsers() {
+        // Seed default admin account
+        User existing = userRepository.findByEmail("lint@maze.com");
+        if (existing == null) {
+            User admin = new User();
+            admin.setName("Lint");
+            admin.setEmail("lint@maze.com");
+            admin.setPassword(passwordEncoder.encode("12345"));
+            admin.setRole("ADMIN");
+            userRepository.save(admin);
+            log.info("Seeded default admin: lint@maze.com");
+        } else {
+            // Ensure password is BCrypt-encoded and role is ADMIN
+            existing.setPassword(passwordEncoder.encode("12345"));
+            existing.setRole("ADMIN");
+            userRepository.save(existing);
+            log.info("Reset password and ensured ADMIN role for: lint@maze.com");
         }
     }
 

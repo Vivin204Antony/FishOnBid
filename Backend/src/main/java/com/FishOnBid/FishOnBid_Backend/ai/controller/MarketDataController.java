@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -183,17 +182,25 @@ public class MarketDataController {
     /**
      * POST /api/admin/market/sync
      * Trigger immediate synchronization with the Institutional OGD API.
+     * Uses .block() to convert reactive Mono to synchronous for servlet compatibility.
      */
     @PostMapping("/sync")
-    public Mono<ResponseEntity<Map<String, Object>>> triggerManualSync() {
+    public ResponseEntity<Map<String, Object>> triggerManualSync() {
         log.info("REST_REQUEST: Manual Institutional Sync Triggered.");
-        return externalFisheriesService.manualSync()
-                .map(result -> {
-                    if ("success".equals(result.get("status"))) {
-                        return ResponseEntity.ok(result);
-                    } else {
-                        return ResponseEntity.internalServerError().body(result);
-                    }
-                });
+        try {
+            Map<String, Object> result = externalFisheriesService.manualSync().block();
+            if (result != null && "success".equals(result.get("status"))) {
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.internalServerError().body(result);
+            }
+        } catch (Exception e) {
+            log.error("Sync failed: {}", e.getMessage());
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("status", "failed");
+            errorResult.put("error", e.getMessage() != null ? e.getMessage() : "Sync timed out or failed");
+            errorResult.put("timestamp", Instant.now());
+            return ResponseEntity.internalServerError().body(errorResult);
+        }
     }
 }

@@ -89,8 +89,8 @@ export default function Dashboard() {
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4" />
         <div className="max-w-6xl mx-auto relative">
           <p className="text-blue-200 text-sm font-medium mb-1 tracking-wide">{todayStr}</p>
-          <h1 className="text-4xl font-black mb-2 flex items-center gap-3">
-            <span className="text-3xl">🐟</span>
+          <h1 className="text-2xl sm:text-4xl font-black mb-2 flex items-center gap-2 sm:gap-3">
+            <span className="text-2xl sm:text-3xl">🐟</span>
             {greeting}, {user?.name?.split(' ')[0] || 'Fisherman'}!
           </h1>
           <p className="text-blue-200 text-base">
@@ -102,7 +102,7 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto px-6 mt-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-12">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-pulse">

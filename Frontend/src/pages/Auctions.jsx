@@ -90,8 +90,8 @@ export default function Auctions() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-black mb-3 flex items-center gap-3">
-                <Fish className="w-10 h-10" /> Live Fish Auctions
+              <h1 className="text-2xl sm:text-4xl font-black mb-3 flex items-center gap-2 sm:gap-3">
+                <Fish className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" /> Live Fish Auctions
               </h1>
               <p className="text-blue-100 text-lg max-w-xl">
                 Real-time marketplace for fresh catch. Secure, transparent, and direct from harbor.
@@ -116,54 +116,54 @@ export default function Auctions() {
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow-xl mb-6 p-2 flex gap-2">
           <button onClick={() => { setActiveTab("live"); setFilterLocation("all"); }}
-            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2
+            className={`flex-1 min-w-0 py-3 px-3 sm:px-6 sm:py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base
               ${activeTab === "live"
                 ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg"
                 : "bg-gray-50 text-gray-600 hover:bg-gray-100"}`}>
-            <Activity className="w-5 h-5" />
-            Live Auctions
-            <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${activeTab === "live" ? "bg-white/20" : "bg-gray-200"}`}>
+            <Activity className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span className="truncate">Live Auctions</span>
+            <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-bold flex-shrink-0 ${activeTab === "live" ? "bg-white/20" : "bg-gray-200"}`}>
               {liveAuctions.length}
             </span>
           </button>
           <button onClick={() => { setActiveTab("closed"); setFilterLocation("all"); }}
-            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2
+            className={`flex-1 min-w-0 py-3 px-3 sm:px-6 sm:py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base
               ${activeTab === "closed"
                 ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg"
                 : "bg-gray-50 text-gray-600 hover:bg-gray-100"}`}>
-            <Archive className="w-5 h-5" />
-            Closed Auctions
-            <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${activeTab === "closed" ? "bg-white/20" : "bg-gray-200"}`}>
+            <Archive className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span className="truncate">Closed Auctions</span>
+            <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-bold flex-shrink-0 ${activeTab === "closed" ? "bg-white/20" : "bg-gray-200"}`}>
               {closedAuctions.length}
             </span>
           </button>
         </div>
 
         {/* Search + Filter + Sort Bar */}
-        <div className="bg-white rounded-2xl shadow-xl p-4 mb-10">
-          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+        <div className="bg-white rounded-2xl shadow-xl p-3 sm:p-4 mb-10">
+          <div className="flex gap-2 sm:gap-4 items-center">
             {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
               <input
                 type="text"
-                placeholder="Search fish name or harbor..."
+                placeholder="Search fish or harbor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-2.5 sm:py-3 bg-gray-50 border-none rounded-xl text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all"
               />
             </div>
 
             {/* Filter by Location */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <button
                 onClick={() => { setShowFilterPanel(p => !p); setShowSortPanel(false); }}
-                className={`px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition-all
+                className={`px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl font-bold flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base transition-all
                   ${filterLocation !== "all"
                     ? "bg-blue-600 text-white shadow-md"
                     : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>
-                <Filter className="w-4 h-4" />
-                {filterLocation === "all" ? "Filter" : filterLocation.replace(" Harbor", "")}
+                <Filter className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">{filterLocation === "all" ? "Filter" : filterLocation.replace(" Harbor", "")}</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showFilterPanel ? "rotate-180" : ""}`} />
               </button>
               {showFilterPanel && (
@@ -182,15 +182,15 @@ export default function Auctions() {
             </div>
 
             {/* Sort */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <button
                 onClick={() => { setShowSortPanel(p => !p); setShowFilterPanel(false); }}
-                className={`px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition-all
+                className={`px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl font-bold flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base transition-all
                   ${sortBy !== "newest"
                     ? "bg-indigo-600 text-white shadow-md"
                     : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>
-                <SlidersHorizontal className="w-4 h-4" />
-                {sortBy === "newest" ? "Sort" : sortLabel}
+                <SlidersHorizontal className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">{sortBy === "newest" ? "Sort" : sortLabel}</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showSortPanel ? "rotate-180" : ""}`} />
               </button>
               {showSortPanel && (

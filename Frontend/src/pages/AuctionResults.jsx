@@ -332,21 +332,21 @@ export default function AuctionResults() {
 
             <div className="max-w-6xl mx-auto px-6 py-6 space-y-5">
                 {/* Search + filter bar */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 flex gap-2 sm:gap-3 items-center">
+                    <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <input value={search} onChange={e => setSearch(e.target.value)}
                             placeholder="Search fish or harbor…"
-                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-300" />
+                            className="w-full pl-9 sm:pl-10 pr-2 sm:pr-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-300" />
                     </div>
 
                     {/* Filter */}
-                    <div className="relative">
+                    <div className="relative flex-shrink-0">
                         <button onClick={() => { setShowFilter(v => !v); setShowSort(false); }}
-                            className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all
+                            className={`px-3 sm:px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 sm:gap-2 transition-all
                 ${filterLoc !== "all" ? "bg-slate-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-                            <Filter className="w-4 h-4" />
-                            {filterLoc === "all" ? "Filter" : filterLoc}
+                            <Filter className="w-4 h-4 flex-shrink-0" />
+                            <span className="hidden sm:inline">{filterLoc === "all" ? "Filter" : filterLoc}</span>
                             <ChevronDown className={`w-4 h-4 transition-transform ${showFilter ? "rotate-180" : ""}`} />
                         </button>
                         {showFilter && (
@@ -364,12 +364,12 @@ export default function AuctionResults() {
                     </div>
 
                     {/* Sort */}
-                    <div className="relative">
+                    <div className="relative flex-shrink-0">
                         <button onClick={() => { setShowSort(v => !v); setShowFilter(false); }}
-                            className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all
+                            className={`px-3 sm:px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 sm:gap-2 transition-all
                 ${sortBy !== "newest" ? "bg-slate-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-                            <SlidersHorizontal className="w-4 h-4" />
-                            {sortLabels[sortBy]}
+                            <SlidersHorizontal className="w-4 h-4 flex-shrink-0" />
+                            <span className="hidden sm:inline">{sortLabels[sortBy]}</span>
                             <ChevronDown className={`w-4 h-4 transition-transform ${showSort ? "rotate-180" : ""}`} />
                         </button>
                         {showSort && (
