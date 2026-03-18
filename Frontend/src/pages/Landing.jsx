@@ -209,7 +209,7 @@ export default function Landing() {
                             },
                         ].map(({ icon: Icon, color, title, desc }) => (
                             <div key={title}
-                                className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100
+                                className="bg-white rounded-3xl p-8 shadow-sm border border-gray-300
                             hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                                 <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${color}
                                   flex items-center justify-center mb-6 shadow-lg`}>
@@ -273,7 +273,7 @@ export default function Landing() {
                             },
                         ].map(({ icon: Icon, color, title, desc }) => (
                             <div key={title}
-                                className="p-6 rounded-2xl border border-gray-100 hover:border-blue-200
+                                className="p-6 rounded-2xl border border-gray-300 hover:border-blue-300
                             hover:shadow-md transition-all duration-200">
                                 <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center mb-4`}>
                                     <Icon className="w-6 h-6" />
