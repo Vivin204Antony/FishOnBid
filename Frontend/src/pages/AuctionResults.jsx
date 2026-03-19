@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import api from "../api/axios";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import {
     Trophy, TrendingUp, Gavel, ExternalLink, Sparkles,
     MapPin, Scale, Clock, Fish, Search, SlidersHorizontal,
-    Filter, ChevronDown, Loader2, Ship, X, ArrowRight
+    Filter, ChevronDown, Loader2, Ship, X, ArrowRight, User
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -275,7 +276,10 @@ function ResultCard({ auction, onOpenOverview }) {
    AuctionResults Page
 ───────────────────────────────────────────────────────────────────────── */
 export default function AuctionResults() {
-    const [auctions, setAuctions] = useState([]);
+    const { user } = useContext(AuthContext);
+    const [allAuctions, setAllAuctions] = useState([]);
+    const [myAuctions, setMyAuctions] = useState([]);
+    const [activeTab, setActiveTab] = useState("all");
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [sortBy, setSortBy] = useState("newest");
@@ -285,11 +289,14 @@ export default function AuctionResults() {
     const [modalAuction, setModalAuction] = useState(null);
 
     useEffect(() => {
-        api.get("/auctions/results")
-            .then(r => setAuctions(r.data))
-            .catch(() => { })
-            .finally(() => setLoading(false));
-    }, []);
+        const fetchAll = api.get("/auctions/results").then(r => setAllAuctions(r.data)).catch(() => {});
+        const fetchMine = user
+            ? api.get("/auctions/results/mine").then(r => setMyAuctions(r.data)).catch(() => {})
+            : Promise.resolve();
+        Promise.all([fetchAll, fetchMine]).finally(() => setLoading(false));
+    }, [user]);
+
+    const auctions = activeTab === "mine" ? myAuctions : allAuctions;
 
     const openModal = useCallback((auction) => setModalAuction(auction), []);
     const closeModal = useCallback(() => setModalAuction(null), []);
@@ -331,6 +338,34 @@ export default function AuctionResults() {
             </div>
 
             <div className="max-w-6xl mx-auto px-6 py-6 space-y-5">
+                {/* Tabs: All Results / My Auctions */}
+                {user && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2 flex gap-2">
+                        <button onClick={() => { setActiveTab("all"); setSearch(""); setFilterLoc("all"); }}
+                            className={`flex-1 min-w-0 py-3 px-3 sm:px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base
+                                ${activeTab === "all"
+                                    ? "bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg"
+                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"}`}>
+                            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                            <span className="truncate">All Results</span>
+                            <span className={`px-2 sm:px-3 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${activeTab === "all" ? "bg-white/20" : "bg-gray-200"}`}>
+                                {allAuctions.length}
+                            </span>
+                        </button>
+                        <button onClick={() => { setActiveTab("mine"); setSearch(""); setFilterLoc("all"); }}
+                            className={`flex-1 min-w-0 py-3 px-3 sm:px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base
+                                ${activeTab === "mine"
+                                    ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg"
+                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"}`}>
+                            <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                            <span className="truncate">My Auctions</span>
+                            <span className={`px-2 sm:px-3 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${activeTab === "mine" ? "bg-white/20" : "bg-gray-200"}`}>
+                                {myAuctions.length}
+                            </span>
+                        </button>
+                    </div>
+                )}
+
                 {/* Search + filter bar */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 flex gap-2 sm:gap-3 items-center">
                     <div className="relative flex-1 min-w-0">

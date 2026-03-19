@@ -97,4 +97,15 @@ public class Auction {
      * Used by admin panel to distinguish Auctioneers from Bidders.
      */
     private String sellerEmail;
+
+    /**
+     * GPS coordinates captured at photo upload time
+     */
+    private Double latitude;
+    private Double longitude;
+
+    /**
+     * Minimum bid increment for fairness (auto-calculated if not set)
+     */
+    private Double minBidIncrement;
 }

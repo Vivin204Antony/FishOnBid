@@ -170,4 +170,18 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
         ORDER BY a.endTime DESC
     """)
     List<Auction> findClosedAuctionsWithBids(@Param("now") Instant now);
+
+    /**
+     * Closed auctions with bids filtered by seller — for "My Auctions" on Results page.
+     */
+    @Query("""
+        SELECT DISTINCT a FROM Auction a
+        WHERE (a.active = false OR a.endTime <= :now)
+        AND a.sellerEmail = :sellerEmail
+        AND EXISTS (SELECT b FROM Bid b WHERE b.auction = a)
+        ORDER BY a.endTime DESC
+    """)
+    List<Auction> findClosedAuctionsWithBidsBySeller(
+            @Param("now") Instant now,
+            @Param("sellerEmail") String sellerEmail);
 }

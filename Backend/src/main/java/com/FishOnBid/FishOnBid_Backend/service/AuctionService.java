@@ -1,10 +1,14 @@
 package com.FishOnBid.FishOnBid_Backend.service;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.FishOnBid.FishOnBid_Backend.entity.Auction;
@@ -26,10 +30,21 @@ public class AuctionService {
     private final BidRepository bidRepo;
     private final EventPublisher eventPublisher;
 
+    @Value("${bid.fairness.max-wins-per-week:5}")
+    private int maxWinsPerWeek;
+
+    @Value("${bid.fairness.cooldown-seconds:30}")
+    private int cooldownSeconds;
+
     public Auction createAuction(Auction auction) {
         // Validate fish type and location against available data
         validateAuctionData(auction);
-        
+
+        // Auto-calculate minimum bid increment if not set: 1% of start price or ₹1, whichever is higher
+        if (auction.getMinBidIncrement() == null || auction.getMinBidIncrement() <= 0) {
+            auction.setMinBidIncrement(Math.max(auction.getStartPrice() * 0.01, 1.0));
+        }
+
         auction.setActive(true);
         Auction saved = auctionRepo.save(auction);
         
@@ -126,8 +141,30 @@ public class AuctionService {
             throw new RuntimeException("Auction is closed");
         }
 
-        if (amount <= auction.getCurrentPrice()) {
-            throw new RuntimeException("Bid must be higher than current price");
+        // ── Fairness: Minimum bid increment ──
+        double minIncrement = auction.getMinBidIncrement() != null ? auction.getMinBidIncrement() : 1.0;
+        if (amount < auction.getCurrentPrice() + minIncrement) {
+            throw new RuntimeException(String.format(
+                    "Bid must be at least ₹%.2f (current ₹%.2f + minimum increment ₹%.2f)",
+                    auction.getCurrentPrice() + minIncrement, auction.getCurrentPrice(), minIncrement));
+        }
+
+        // ── Fairness: Bid cooldown per user per auction ──
+        Optional<Bid> lastBid = bidRepo.findTopByBidderEmailAndAuctionIdOrderByBidTimeDesc(email, auctionId);
+        if (lastBid.isPresent()) {
+            long secondsSinceLast = Duration.between(lastBid.get().getBidTime(), Instant.now()).getSeconds();
+            if (secondsSinceLast < cooldownSeconds) {
+                long waitTime = cooldownSeconds - secondsSinceLast;
+                throw new RuntimeException("Please wait " + waitTime + " seconds before placing another bid");
+            }
+        }
+
+        // ── Fairness: Max concurrent wins per week ──
+        Instant oneWeekAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+        long recentWins = bidRepo.countRecentWinsByBidder(email, oneWeekAgo);
+        if (recentWins >= maxWinsPerWeek) {
+            throw new RuntimeException(
+                    "You have won " + recentWins + " auctions this week. Please allow others to participate.");
         }
 
         double previousPrice = auction.getCurrentPrice();
@@ -221,6 +258,13 @@ public class AuctionService {
      */
     public List<Auction> getClosedAuctionsWithBids() {
         return auctionRepo.findClosedAuctionsWithBids(Instant.now());
+    }
+
+    /**
+     * Get closed auctions with bids for a specific seller — "My Auctions" on Results page.
+     */
+    public List<Auction> getClosedAuctionsWithBidsBySeller(String sellerEmail) {
+        return auctionRepo.findClosedAuctionsWithBidsBySeller(Instant.now(), sellerEmail);
     }
 
     /**

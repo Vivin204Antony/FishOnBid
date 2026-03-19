@@ -61,6 +61,14 @@ public class AuctionController {
         return auctionService.getClosedAuctionsWithBids();
     }
 
+    // 🔹 Get closed auctions WITH bids for the logged-in seller — "My Auctions" tab
+    @GetMapping("/results/mine")
+    public List<Auction> getMyAuctionResults() {
+        String email = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        return auctionService.getClosedAuctionsWithBidsBySeller(email);
+    }
+
     // 🔹 Get auction by ID
     @GetMapping("/{id}")
     public Auction getAuctionById(@PathVariable Long id) {

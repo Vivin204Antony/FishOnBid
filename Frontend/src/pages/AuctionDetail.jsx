@@ -28,9 +28,11 @@ export default function AuctionDetail() {
   const [timeLeft, setTimeLeft] = useState("");
   const [priceFlash, setPriceFlash] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const pollingRef = useRef(null);
   const countdownRef = useRef(null);
+  const cooldownRef = useRef(null);
 
   // ── Helpers ──────────────────────────────────────
   const maskEmail = (email) => {
@@ -177,12 +179,26 @@ export default function AuctionDetail() {
   };
 
   // ── Bid submit ────────────────────────────────────
+  const minIncrement = auction?.minBidIncrement || 1;
+  const minBidAmount = auction ? auction.currentPrice + minIncrement : 0;
+
+  const startCooldown = (seconds = 30) => {
+    setCooldown(seconds);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) { clearInterval(cooldownRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleBid = async (e) => {
     e.preventDefault();
     setBidError(""); setBidSuccess("");
     const amount = parseFloat(bidAmount);
-    if (!amount || amount <= auction.currentPrice) {
-      setBidError(`Bid must be higher than ₹${auction.currentPrice}`);
+    if (!amount || amount < minBidAmount) {
+      setBidError(`Bid must be at least ₹${minBidAmount.toFixed(2)} (current ₹${auction.currentPrice} + min increment ₹${minIncrement})`);
       return;
     }
     setBidLoading(true);
@@ -190,6 +206,7 @@ export default function AuctionDetail() {
       await api.post(`/auctions/${id}/bid`, { amount });
       setBidSuccess("Your bid has been placed!");
       setBidAmount("");
+      startCooldown(30);
       if (!wsConnected) {
         const res = await api.get(`/auctions/${id}`);
         setAuction(res.data);
@@ -414,17 +431,27 @@ export default function AuctionDetail() {
                         <input
                           type="number" step="0.01" value={bidAmount}
                           onChange={(e) => setBidAmount(e.target.value)}
-                          placeholder={`${(auction.currentPrice + 1).toFixed(2)}`}
-                          className="w-full pl-10 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-xl font-bold focus:ring-4 focus:ring-blue-100 transition-all"
+                          placeholder={`${minBidAmount.toFixed(2)}`}
+                          disabled={cooldown > 0}
+                          className="w-full pl-10 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-xl font-bold focus:ring-4 focus:ring-blue-100 transition-all disabled:opacity-50"
                         />
                       </div>
+                      <p className="text-xs text-gray-400 mt-1.5">
+                        Min increment: ₹{minIncrement.toFixed(2)} · Next bid ≥ ₹{minBidAmount.toFixed(2)}
+                      </p>
                     </div>
-                    <button type="submit" disabled={bidLoading || !user}
-                      className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl font-black text-xl shadow-lg hover:shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
-                      {bidLoading
-                        ? <><Loader2 className="w-5 h-5 animate-spin" /> Placing Bid...</>
-                        : <><Gavel className="w-5 h-5" /> PLACE BID</>}
-                    </button>
+                    {cooldown > 0 ? (
+                      <div className="w-full py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold text-center text-lg">
+                        Cooldown: {cooldown}s
+                      </div>
+                    ) : (
+                      <button type="submit" disabled={bidLoading || !user}
+                        className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl font-black text-xl shadow-lg hover:shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+                        {bidLoading
+                          ? <><Loader2 className="w-5 h-5 animate-spin" /> Placing Bid...</>
+                          : <><Gavel className="w-5 h-5" /> PLACE BID</>}
+                      </button>
+                    )}
                     {bidError && (
                       <p className="text-center text-red-600 font-bold text-sm bg-red-50 py-3 rounded-lg flex items-center justify-center gap-2">
                         <AlertCircle className="w-4 h-4" /> {bidError}

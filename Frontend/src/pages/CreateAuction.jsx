@@ -79,6 +79,7 @@ export default function CreateAuction() {
     // ──── GPS State ────
     const [gpsDetecting, setGpsDetecting] = useState(false);
     const [gpsDetected, setGpsDetected] = useState(false);
+    const [gpsCoords, setGpsCoords] = useState({ latitude: null, longitude: null });
 
     // ──────────────────────────────────────────────
     // LIFECYCLE: Fetch metadata + auto-detect GPS
@@ -102,7 +103,6 @@ export default function CreateAuction() {
             }
         };
         fetchMetadata();
-        autoDetectGPS();
 
         // Cleanup camera stream on unmount
         return () => stopCamera();
@@ -118,6 +118,8 @@ export default function CreateAuction() {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
+                // Store raw GPS coordinates for the auction record
+                setGpsCoords({ latitude, longitude });
                 // Map GPS coordinates to nearest known harbor
                 const nearestHarbor = findNearestHarbor(latitude, longitude);
                 if (nearestHarbor) {
@@ -215,6 +217,8 @@ export default function CreateAuction() {
         setImagePreview(dataUrl);
         stopCamera();
 
+        // Auto-trigger GPS capture at photo moment
+        autoDetectGPS();
         // Auto-trigger vision analysis
         runVisionAnalysis(base64Data);
     }, []);
@@ -252,6 +256,8 @@ export default function CreateAuction() {
             setVisionResult(null);
             setAiResult(null);
 
+            // Auto-trigger GPS capture at upload moment
+            autoDetectGPS();
             // Auto-trigger vision analysis
             runVisionAnalysis(base64Data);
         };
@@ -519,6 +525,8 @@ export default function CreateAuction() {
                 endTime: endTime.toISOString(),
                 active: true,
                 location: form.location || null,
+                latitude: gpsCoords.latitude,
+                longitude: gpsCoords.longitude,
                 quantityKg: form.quantityKg ? parseFloat(form.quantityKg) : null,
                 sellerNotes: form.sellerNotes || null,
                 videoUrl: form.videoUrl ? form.videoUrl.trim() : null,
