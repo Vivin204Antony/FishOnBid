@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" font-family="Arial, Helvetica, sans-serif">
+  <rect x="0" y="0" width="1200" height="620" fill="#FFFFFF"/>
+
+  <text x="600" y="38" text-anchor="middle" font-size="20" font-weight="bold" fill="#111111">
+    Figure 2: GenAI + RAG Prediction Dataflow (End-to-End)
+  </text>
+  <text x="600" y="60" text-anchor="middle" font-size="13" fill="#333333">
+    How a single fish image becomes an explainable market-aware price suggestion
+  </text>
+
+  <!-- Stage 1 -->
+  <rect x="40" y="110" width="180" height="110" fill="#FFFFFF" stroke="#1F4E79" stroke-width="2" rx="8"/>
+  <text x="130" y="135" text-anchor="middle" font-size="13" font-weight="bold" fill="#1F4E79">1. Capture</text>
+  <text x="55" y="160" font-size="11" fill="#111111">Seller snaps catch</text>
+  <text x="55" y="178" font-size="11" fill="#111111">Base64 image + GPS</text>
+  <text x="55" y="196" font-size="11" fill="#111111">Quantity (kg), type hint</text>
+  <text x="55" y="214" font-size="11" fill="#111111">Duration (hours)</text>
+
+  <!-- arrow -->
+  <line x1="220" y1="165" x2="260" y2="165" stroke="#111111" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- Stage 2 -->
+  <rect x="260" y="110" width="200" height="110" fill="#FFFFFF" stroke="#B4513B" stroke-width="2" rx="8"/>
+  <text x="360" y="135" text-anchor="middle" font-size="13" font-weight="bold" fill="#B4513B">2. GenAI Vision</text>
+  <text x="275" y="160" font-size="11" fill="#111111">Gemini 1.5 Flash call</text>
+  <text x="275" y="178" font-size="11" fill="#111111">Species identification</text>
+  <text x="275" y="196" font-size="11" fill="#111111">Freshness score 0–100</text>
+  <text x="275" y="214" font-size="11" fill="#111111">Quality grade + confidence</text>
+
+  <line x1="460" y1="165" x2="500" y2="165" stroke="#111111" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- Stage 3 -->
+  <rect x="500" y="110" width="200" height="110" fill="#FFFFFF" stroke="#2E7D32" stroke-width="2" rx="8"/>
+  <text x="600" y="135" text-anchor="middle" font-size="13" font-weight="bold" fill="#2E7D32">3. Embed + Retrieve</text>
+  <text x="515" y="160" font-size="11" fill="#111111">5-D embedding vector</text>
+  <text x="515" y="178" font-size="11" fill="#111111">Cosine similarity search</text>
+  <text x="515" y="196" font-size="11" fill="#111111">Top-k similar auctions</text>
+  <text x="515" y="214" font-size="11" fill="#111111">90-day lookback window</text>
+
+  <line x1="700" y1="165" x2="740" y2="165" stroke="#111111" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- Stage 4 -->
+  <rect x="740" y="110" width="200" height="110" fill="#FFFFFF" stroke="#6A1B9A" stroke-width="2" rx="8"/>
+  <text x="840" y="135" text-anchor="middle" font-size="13" font-weight="bold" fill="#6A1B9A">4. Fuse + Predict</text>
+  <text x="755" y="160" font-size="11" fill="#111111">Trust-weighted fusion</text>
+  <text x="755" y="178" font-size="11" fill="#111111">Govt 1.5× • Platform 1.0×</text>
+  <text x="755" y="196" font-size="11" fill="#111111">Recency decay applied</text>
+  <text x="755" y="214" font-size="11" fill="#111111">Hybrid 0.7·int + 0.3·ext</text>
+
+  <line x1="940" y1="165" x2="980" y2="165" stroke="#111111" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- Stage 5 -->
+  <rect x="980" y="110" width="180" height="110" fill="#FFFFFF" stroke="#1F4E79" stroke-width="2" rx="8"/>
+  <text x="1070" y="135" text-anchor="middle" font-size="13" font-weight="bold" fill="#1F4E79">5. Serve</text>
+  <text x="995" y="160" font-size="11" fill="#111111">Min / Suggested / Max</text>
+  <text x="995" y="178" font-size="11" fill="#111111">Confidence band ±10%</text>
+  <text x="995" y="196" font-size="11" fill="#111111">Rationale text</text>
+  <text x="995" y="214" font-size="11" fill="#111111">Shown to seller + bidders</text>
+
+  <!-- Parallel data sources -->
+  <rect x="260" y="300" width="200" height="90" fill="#FFFFFF" stroke="#555555" stroke-width="1.5" rx="8"/>
+  <text x="360" y="325" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Platform History (MySQL)</text>
+  <text x="275" y="348" font-size="11" fill="#111111">Past closed auctions</text>
+  <text x="275" y="366" font-size="11" fill="#111111">Winning bid, quantity</text>
+  <text x="275" y="384" font-size="11" fill="#111111">Location, timestamp</text>
+
+  <rect x="500" y="300" width="200" height="90" fill="#FFFFFF" stroke="#555555" stroke-width="1.5" rx="8"/>
+  <text x="600" y="325" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Govt APIs (data.gov.in)</text>
+  <text x="515" y="348" font-size="11" fill="#111111">Daily mandi commodity prices</text>
+  <text x="515" y="366" font-size="11" fill="#111111">AgMarkNet (77M records)</text>
+  <text x="515" y="384" font-size="11" fill="#111111">Variety-wise benchmarks</text>
+
+  <rect x="740" y="300" width="200" height="90" fill="#FFFFFF" stroke="#555555" stroke-width="1.5" rx="8"/>
+  <text x="840" y="325" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Baseline &amp; Fallback</text>
+  <text x="755" y="348" font-size="11" fill="#111111">Tuna ₹510 • Salmon ₹690</text>
+  <text x="755" y="366" font-size="11" fill="#111111">Pomfret ₹610 (default)</text>
+  <text x="755" y="384" font-size="11" fill="#111111">Used when APIs offline</text>
+
+  <!-- Arrows from data sources up -->
+  <line x1="360" y1="300" x2="600" y2="225" stroke="#2E7D32" stroke-width="1.5" marker-end="url(#arrow2)" stroke-dasharray="4,3"/>
+  <line x1="600" y1="300" x2="600" y2="225" stroke="#2E7D32" stroke-width="1.5" marker-end="url(#arrow2)" stroke-dasharray="4,3"/>
+  <line x1="840" y1="300" x2="840" y2="225" stroke="#6A1B9A" stroke-width="1.5" marker-end="url(#arrow2)" stroke-dasharray="4,3"/>
+
+  <!-- Audit loop -->
+  <rect x="40" y="440" width="1120" height="60" fill="#FFFFFF" stroke="#1F4E79" stroke-width="2" rx="8"/>
+  <text x="60" y="465" font-size="13" font-weight="bold" fill="#1F4E79">AUDIT / EXPLAINABILITY (AiDecisionLog)</text>
+  <text x="60" y="485" font-size="11" fill="#333333">Each prediction persisted with: input vector, retrieved documents, weights applied, output band, processing time, confidence — enabling post-hoc review and model iteration.</text>
+
+  <line x1="1070" y1="220" x2="1070" y2="440" stroke="#111111" stroke-width="2" marker-end="url(#arrow2)"/>
+  <line x1="130" y1="440" x2="130" y2="230" stroke="#111111" stroke-width="2" stroke-dasharray="4,3"/>
+  <line x1="130" y1="230" x2="260" y2="165" stroke="#111111" stroke-width="2" marker-end="url(#arrow2)" stroke-dasharray="4,3"/>
+  <text x="50" y="350" font-size="10" fill="#333333" transform="rotate(-90 50 350)">feedback loop</text>
+
+  <!-- Footer -->
+  <text x="60" y="540" font-size="12" font-weight="bold" fill="#111111">Legend:</text>
+  <text x="60" y="560" font-size="11" fill="#333333">Solid arrow = primary flow • Dashed = retrieval / feedback • Colored borders denote pipeline role: Vision (orange), RAG (green), Pricing (purple).</text>
+  <text x="60" y="580" font-size="11" fill="#333333">All stages are instrumented — latency, token cost, cache hit-rate, and confidence are exported as Resilience4j + Micrometer metrics.</text>
+  <text x="60" y="600" font-size="11" fill="#333333">Circuit breakers isolate each external tool: Gemini, Govt API, Cloudinary, WebSocket — so degradation in one never stalls the auction critical path.</text>
+
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#111111"/>
+    </marker>
+  </defs>
+</svg>

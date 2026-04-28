@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 880" font-family="Arial, Helvetica, sans-serif">
+  <rect x="0" y="0" width="1200" height="880" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="600" y="38" text-anchor="middle" font-size="22" font-weight="bold" fill="#111111">
+    Figure 3: Distributed Systems Architecture &amp; Concurrency Safety
+  </text>
+  <text x="600" y="62" text-anchor="middle" font-size="14" fill="#333333">
+    Three-Tier Topology with Pessimistic Locking and Real-Time Event Bus
+  </text>
+
+  <!-- TIER 1: CLIENT -->
+  <rect x="40" y="90" width="1120" height="110" fill="#FFFFFF" stroke="#1F4E79" stroke-width="2" rx="8"/>
+  <text x="60" y="115" font-size="14" font-weight="bold" fill="#1F4E79">CLIENT TIER (React 19 SPA + PWA over HTTPS &amp; WebSocket)</text>
+
+  <rect x="70" y="135" width="190" height="50" fill="#FFFFFF" stroke="#333333" stroke-width="1.5" rx="6"/>
+  <text x="165" y="157" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Bidder A</text>
+  <text x="165" y="174" text-anchor="middle" font-size="11" fill="#333333">Live Bid Console</text>
+
+  <rect x="280" y="135" width="190" height="50" fill="#FFFFFF" stroke="#333333" stroke-width="1.5" rx="6"/>
+  <text x="375" y="157" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Bidder B</text>
+  <text x="375" y="174" text-anchor="middle" font-size="11" fill="#333333">Live Bid Console</text>
+
+  <rect x="490" y="135" width="190" height="50" fill="#FFFFFF" stroke="#333333" stroke-width="1.5" rx="6"/>
+  <text x="585" y="157" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Bidder C</text>
+  <text x="585" y="174" text-anchor="middle" font-size="11" fill="#333333">Mobile PWA</text>
+
+  <rect x="700" y="135" width="190" height="50" fill="#FFFFFF" stroke="#333333" stroke-width="1.5" rx="6"/>
+  <text x="795" y="157" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Seller</text>
+  <text x="795" y="174" text-anchor="middle" font-size="11" fill="#333333">Snap &amp; Bid Creator</text>
+
+  <rect x="910" y="135" width="220" height="50" fill="#FFFFFF" stroke="#333333" stroke-width="1.5" rx="6"/>
+  <text x="1020" y="157" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Admin Console</text>
+  <text x="1020" y="174" text-anchor="middle" font-size="11" fill="#333333">Monitoring + Audit View</text>
+
+  <!-- Arrows down to gateway -->
+  <line x1="300" y1="200" x2="300" y2="223" stroke="#111111" stroke-width="2" marker-end="url(#arrow3)"/>
+  <line x1="600" y1="200" x2="600" y2="223" stroke="#111111" stroke-width="2" marker-end="url(#arrow3)"/>
+  <line x1="900" y1="200" x2="900" y2="223" stroke="#111111" stroke-width="2" marker-end="url(#arrow3)"/>
+  <text x="622" y="217" font-size="10" fill="#555555">HTTPS + WSS (STOMP)</text>
+
+  <!-- TIER 2: API GATEWAY / EVENT BUS -->
+  <rect x="40" y="225" width="1120" height="80" fill="#FFFFFF" stroke="#1F4E79" stroke-width="2" rx="8"/>
+  <text x="60" y="250" font-size="14" font-weight="bold" fill="#1F4E79">API GATEWAY + REAL-TIME EVENT BUS</text>
+
+  <rect x="70" y="260" width="470" height="35" fill="#FFFFFF" stroke="#B4513B" stroke-width="1.5" rx="6"/>
+  <text x="305" y="282" text-anchor="middle" font-size="12" fill="#111111">REST Endpoints • Spring Security JWT • Resilience4j</text>
+
+  <rect x="660" y="260" width="470" height="35" fill="#FFFFFF" stroke="#2E7D32" stroke-width="1.5" rx="6"/>
+  <text x="895" y="282" text-anchor="middle" font-size="12" fill="#111111">STOMP WebSocket Broker • /topic/auction/{id} • Auto-reconnect</text>
+
+  <!-- Arrows down to app tier -->
+  <line x1="400" y1="305" x2="400" y2="333" stroke="#111111" stroke-width="2" marker-end="url(#arrow3)"/>
+  <line x1="800" y1="305" x2="800" y2="333" stroke="#111111" stroke-width="2" marker-end="url(#arrow3)"/>
+
+  <!-- TIER 3: APPLICATION TIER -->
+  <rect x="40" y="335" width="1120" height="280" fill="#FFFFFF" stroke="#1F4E79" stroke-width="2" rx="8"/>
+  <text x="60" y="360" font-size="14" font-weight="bold" fill="#1F4E79">APPLICATION TIER (Spring Boot 3.5 • Java 21 • Strict Controller → Service → Repository)</text>
+
+  <!-- Left: Controller/Service/Repository stack -->
+  <rect x="70" y="380" width="340" height="55" fill="#FFFFFF" stroke="#6A1B9A" stroke-width="1.5" rx="6"/>
+  <text x="240" y="403" text-anchor="middle" font-size="13" font-weight="bold" fill="#6A1B9A">AuctionController / BidController</text>
+  <text x="240" y="422" text-anchor="middle" font-size="11" fill="#333333">HTTP request mapping • DTO validation • Auth checks</text>
+
+  <line x1="240" y1="435" x2="240" y2="453" stroke="#111111" stroke-width="2" marker-end="url(#arrow3)"/>
+
+  <rect x="70" y="455" width="340" height="55" fill="#FFFFFF" stroke="#6A1B9A" stroke-width="1.5" rx="6"/>
+  <text x="240" y="478" text-anchor="middle" font-size="13" font-weight="bold" fill="#6A1B9A">BidService (@Transactional)</text>
+  <text x="240" y="497" text-anchor="middle" font-size="11" fill="#333333">Business rules • Fairness checks • Event publishing</text>
+
+  <line x1="240" y1="510" x2="240" y2="528" stroke="#111111" stroke-width="2" marker-end="url(#arrow3)"/>
+
+  <rect x="70" y="530" width="340" height="55" fill="#FFFFFF" stroke="#6A1B9A" stroke-width="1.5" rx="6"/>
+  <text x="240" y="553" text-anchor="middle" font-size="13" font-weight="bold" fill="#6A1B9A">BidRepository (JPA + @Lock)</text>
+  <text x="240" y="572" text-anchor="middle" font-size="11" fill="#333333">PESSIMISTIC_WRITE query • Row-level MySQL lock</text>
+
+  <!-- Right: Concurrency Safety Zone -->
+  <rect x="440" y="380" width="700" height="210" fill="#FFFFFF" stroke="#C62828" stroke-width="2" rx="8"/>
+  <text x="790" y="402" text-anchor="middle" font-size="13" font-weight="bold" fill="#C62828">CONCURRENCY SAFETY ZONE — Lost-Update Prevention</text>
+
+  <!-- T1 lane -->
+  <rect x="460" y="415" width="320" height="160" fill="#FFFFFF" stroke="#555555" stroke-width="1" rx="6"/>
+  <text x="620" y="435" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Transaction T1 (Bidder A)</text>
+  <text x="475" y="457" font-size="11" fill="#111111">1. SELECT ... FOR UPDATE on auction row</text>
+  <text x="475" y="475" font-size="11" fill="#111111">2. Acquires X-lock → reads current price</text>
+  <text x="475" y="493" font-size="11" fill="#111111">3. Validates amount &gt; current price</text>
+  <text x="475" y="511" font-size="11" fill="#111111">4. INSERT bid + UPDATE auction price</text>
+  <text x="475" y="529" font-size="11" fill="#111111">5. COMMIT → lock released</text>
+  <text x="475" y="555" font-size="11" font-style="italic" fill="#2E7D32">Result: Bid accepted, broadcast fired</text>
+
+  <!-- Arrow T1 → T2 -->
+  <line x1="780" y1="495" x2="800" y2="495" stroke="#C62828" stroke-width="2" marker-end="url(#arrow3)"/>
+
+  <!-- T2 lane -->
+  <rect x="800" y="415" width="320" height="160" fill="#FFFFFF" stroke="#555555" stroke-width="1" rx="6"/>
+  <text x="960" y="435" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Transaction T2 (Bidder B)</text>
+  <text x="815" y="457" font-size="11" fill="#111111">1. SELECT ... FOR UPDATE on same row</text>
+  <text x="815" y="475" font-size="11" fill="#111111">2. BLOCKS waiting for T1 lock release</text>
+  <text x="815" y="493" font-size="11" fill="#111111">3. Acquires lock after T1 commit</text>
+  <text x="815" y="511" font-size="11" fill="#111111">4. Re-reads updated (new) price</text>
+  <text x="815" y="529" font-size="11" fill="#111111">5. Re-validates against new state</text>
+  <text x="815" y="555" font-size="11" font-style="italic" fill="#B4513B">Result: Rejected if stale, else proceeds</text>
+
+  <!-- Arrow down to data tier -->
+  <line x1="240" y1="615" x2="240" y2="648" stroke="#111111" stroke-width="2" marker-end="url(#arrow3)"/>
+
+  <!-- TIER 4: DATA TIER -->
+  <rect x="40" y="650" width="1120" height="150" fill="#FFFFFF" stroke="#1F4E79" stroke-width="2" rx="8"/>
+  <text x="60" y="675" font-size="14" font-weight="bold" fill="#1F4E79">DATA TIER + EXTERNAL INTEGRATION (Scheduled Daily)</text>
+
+  <rect x="70" y="690" width="330" height="95" fill="#FFFFFF" stroke="#333333" stroke-width="1.5" rx="6"/>
+  <text x="235" y="713" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">MySQL 8.0 (Primary Datastore)</text>
+  <text x="85" y="735" font-size="11" fill="#111111">• auction (row-level X-lock target)</text>
+  <text x="85" y="752" font-size="11" fill="#111111">• bid (atomic INSERT in same tx)</text>
+  <text x="85" y="769" font-size="11" fill="#111111">• user, ai_decision_log</text>
+
+  <rect x="420" y="690" width="330" height="95" fill="#FFFFFF" stroke="#333333" stroke-width="1.5" rx="6"/>
+  <text x="585" y="713" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">Cache &amp; In-Memory State</text>
+  <text x="435" y="735" font-size="11" fill="#111111">• ConcurrentHashMap price cache</text>
+  <text x="435" y="752" font-size="11" fill="#111111">• Hourly RAG vector store rebuild</text>
+  <text x="435" y="769" font-size="11" fill="#111111">• WebSocket session registry</text>
+
+  <rect x="770" y="690" width="370" height="95" fill="#FFFFFF" stroke="#333333" stroke-width="1.5" rx="6"/>
+  <text x="955" y="713" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">External API Layer (Scheduled Daily)</text>
+  <text x="785" y="735" font-size="11" fill="#111111">• data.gov.in Fisheries / AgMarkNet pull</text>
+  <text x="785" y="752" font-size="11" fill="#111111">• @Scheduled(cron) every 24 h</text>
+  <text x="785" y="769" font-size="11" fill="#111111">• Circuit breaker + stale-cache fallback</text>
+
+  <!-- WebSocket broadcast feedback loop (app tier → clients) -->
+  <line x1="1160" y1="495" x2="1180" y2="495" stroke="#2E7D32" stroke-width="2"/>
+  <line x1="1180" y1="495" x2="1180" y2="165" stroke="#2E7D32" stroke-width="2"/>
+  <line x1="1180" y1="165" x2="1133" y2="165" stroke="#2E7D32" stroke-width="2" marker-end="url(#arrow3g)"/>
+  <text x="1192" y="340" font-size="10" fill="#2E7D32" transform="rotate(90 1192 340)">bid broadcast to all subscribers</text>
+
+  <!-- Footer -->
+  <text x="60" y="825" font-size="12" font-weight="bold" fill="#111111">Concurrency Guarantee:</text>
+  <text x="60" y="843" font-size="11" fill="#333333">@Lock(LockModeType.PESSIMISTIC_WRITE) on BidRepository serialises concurrent bid attempts at the row level, eliminating the lost-update anomaly even at 10,000+ simultaneous subscribers.</text>
+  <text x="60" y="861" font-size="11" fill="#333333">Solid black arrows = synchronous request path • Green arrow = asynchronous WebSocket broadcast • Red box = critical section under row-level X-lock.</text>
+
+  <defs>
+    <marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#111111"/>
+    </marker>
+    <marker id="arrow3g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2E7D32"/>
+    </marker>
+  </defs>
+</svg>
