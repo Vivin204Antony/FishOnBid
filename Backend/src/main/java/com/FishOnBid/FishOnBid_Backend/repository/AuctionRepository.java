@@ -184,4 +184,19 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findClosedAuctionsWithBidsBySeller(
             @Param("now") Instant now,
             @Param("sellerEmail") String sellerEmail);
+
+    /**
+     * Synthetic closed auctions that have no bids — used by DataSeeder to backfill
+     * bid history so the Results page can render them. We identify synthetic rows
+     * by sellerEmail being null (the seeder never sets it; real users always do),
+     * which is more reliable than dataSource since legacy rows may have a null
+     * dataSource column populated by an `ddl-auto=update` schema migration.
+     */
+    @Query("""
+        SELECT a FROM Auction a
+        WHERE a.sellerEmail IS NULL
+        AND (a.active = false OR a.endTime <= :now)
+        AND NOT EXISTS (SELECT b FROM Bid b WHERE b.auction = a)
+    """)
+    List<Auction> findSyntheticClosedAuctionsWithoutBids(@Param("now") Instant now);
 }

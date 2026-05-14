@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\\\Users\\\\s antony *)",
+      "Bash(mysql -uroot -proot fishonbid_db -N -B -e ' *)"
+    ]
+  }
+}
